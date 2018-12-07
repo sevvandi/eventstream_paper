@@ -72,25 +72,29 @@
 	
 	%OK, so you are describing a situation where the feature vector can't really be computed accurately until the event is finished (so we can know it's shape etc.) but at earler times we have an incomplete/partial observation, and we want to know if we can use this to do early classifation of events (assuming that we have already been successful in early detection of events?)
 	
-	For events with time-varying behaviour standard classification techniques may not be suitable, if early detection is important. This is because an event can last for some time and  event features may change as the event progresses, such that an accurate feature vector can only be computed after the event is finished. However, for applications where early classification is important, this is not satisfactory as one cannot wait until the event  finishes to classify it.  Nevertheless, we have access to incomplete/partial information while the event is still progressing,  giving rise to a premature/incomplete feature vector. Our focus is on classifying events using this premature feature vector.  To do this we incorporate time-varying coefficients in our model. A linear model with time-varying coefficients is given by Equation \eqref{eq:Int1}:
+	We are interested in events that start, develop for some time and stop at a certain time. Along with the event features, we use the ``age'' to describe these events.  We note that the age and time of events are different quantities. The age of an event is the time duration for which it has been growing, i.e. the difference between the current time and the start time of the event, where as time refers to the current time. 
+	
+	For events with age-varying behaviour standard classification techniques may not be suitable, if early detection is important. This is because the event features may change as the event progresses, such that an accurate feature vector can only be computed after the event is finished. However, for applications where early classification is important, this is not satisfactory as one cannot wait until the event  finishes to classify it.  While the event is still progressing, we have access to incomplete/partial information,  giving rise to a premature/incomplete feature vector. Our focus is on classifying events using this premature feature vector.  To do this we incorporate age-varying coefficients in our model similar to the varying coefficients models \cite{hastie1993varying}. A linear model with age-varying coefficients is given by Equation \eqref{eq:Int1}:
 	
 	\begin{equation}\label{eq:Int1}
 	y_t = a_0(t)  + a_1(t) x_1(t) + \ldots + a_b(t)x_b(t) + \epsilon_t \, , 
 	\end{equation} 
 	\noindent
-	where $y_t$ is the output, $a_i(t)$ are the time-varying coefficients and $x_i(t)$ are the attributes of the event at time $t$. A logistic model with time-varying coefficients is given by Equations \eqref{eq:Int1} and  \eqref{eq:Int2}:
+	where $y_t$ is the output at age $t$, $a_i(t)$ are the age-varying coefficients and $x_i(t)$ are the attributes of the event at age $t$. A logistic model with age-varying coefficients is given by Equations \eqref{eq:Int1} and  \eqref{eq:Int2}:
 	
 	\begin{equation}\label{eq:Int2}
 	z_t = \frac{e^{y_t}}{1 + e^{y_t}} \, ,
 	\end{equation} 
 	\noindent
-	where $z_t$ is the probability the event belongs to a given class in the two class scenario. As an event develops, the features $x_i(t)$ change with the age of the event, while keeping the class label constant. Thus, it is clear that the coefficients $a_i(t)$ need to change with the age of the event, to keep $y_t$ within a certain range. For an overview of models with varying coefficients the reader is referred to \cite{hastie1993varying}. 
-	
-	Even though time-varying models has been studied in different contexts \cite{harvey1989time, wang1998cluster, hoover1998nonparametric}, they have not been explored for event detection and classification. 
+	where $z_t$ is the probability, an event of age $t$ belongs to a given class in the two class scenario. As an event develops, the features $x_i(t)$ change with the age of the event, while keeping the class label constant. Thus, it is clear that the coefficients $a_i(t)$ need to change with the age of the event. 
+
+	At this point, we note that concept drift \cite{widmer1996learning, tsymbal2004problem,klinkenberg2000detecting,gama2014survey} or non-stationarity of data streams \cite{hulten2001mining, gama2010knowledge, gaber2005mining} is different from  age-varying events. As we will show in Section \ref{subsec:Synthetic}, age-varying events can occur in stationary data streams or data streams without any concept drift. This is because age-varying behaviour is change within the event as opposed to a change in the data stream. Even though non-stationarity and time-varying models has been studied in different contexts \cite{harvey1989time, wang1998cluster, hoover1998nonparametric}, they have not been explored for premature event classification to the best of our knowledge. 
 	
 	 %may last  time-dependent class boundary is not encapsulated in standard classifiers. 
 	% Our focus is on early classification of time dependent events. Specifically, early classification of spatio-temporal events with contiguous spatial dimensions.  
-	We investigate time-dependent models for spatio-temporal events that change with event-age. We note that age and time are different quantities. The age of an event is the time duration for which it has been growing, i.e. the difference between the current time and the birth time of the event, where as time refers to the current time.  We explore event classification using using two different approaches : \begin{inparaenum} \item Developing-events classifier, which is a series of logistic regression classifiers tied together with an $L_2$ penalty, and \item tiered dynamic logistic classifiers, which use  state-space models.  \end{inparaenum} 
+	%We note that age and time are different quantities. The age of an event is the time duration for which it has been growing, i.e. the difference between the current time and the birth time of the event, where as time refers to the current time.  We investigate time-dependent models for spatio-temporal events that change with event-age. 
+	
+	We explore early event classification using two approaches that are based on different principles: \begin{inparaenum} \item logistic regression, and \item  state-space models.  \end{inparaenum} These two approaches complement each other as logistic regression by itself is a static model more suited for stationary distributions, and a state space model coupled with a Kalman filter can update easily, which is advantageous for non-stationary data distributions. On the other hand, logistic regression may give better results than state space models for a stable data distribution.   
 	
 	Our proposed framework, depicted in Figure \ref{fig:1}  can be used in real-world applications that give rise to spatio-temporal events with contiguous spatial dimensions. Typically pre-processing is also a common step done before event extraction. However we do not focus on pre-processing data as techniques differ depending on the application.  As event extraction is needed before classification  we also propose a simple method for event extraction. We make this work available in the R package {\it eventstream}. 
 	
@@ -142,11 +146,18 @@
 	 	\footnotesize
 	 	\SetKwInOut{Input}{input}
 	 	\SetKwInOut{Output}{output}
-	 	\Input{$A$ - a 2 or 3-dimensional array, parameters $\alpha$, $\epsilon$ and {\it minPts}. }
-	 	\Output{events}
-	  	Convert $A$ to a mesh-grid format $B$, i.e. $B$ contains 2D/3D grid coordinates and the value of each cell of $A$.  \;
-	 	Of the cell values, get the positions and values of $B$ greater than $\alpha^{\text{th}}$ percentile. \;
-	 	Using DBSCAN cluster the chosen cells using $\epsilon$ and {\it minPts}. \;
+	 	\Input{a 2 or 3-dimensional array $A_{n\times m}$ or $A_{n\times m \times k}$ , and parameters $\alpha$, $\epsilon$ and {\it minPts}. }
+	 	\Output{events: $A|_S \subset A$  and the event ids for each $s_{ij} \in A|_S$ (or $s_{ijk}$ if $A$ is 3-dimensional. }
+	 	Let $a_{ij}$ be the signal value at $(i, j)$ position of $A$, if $A$ is 2-dimensional and $a_{ijk}$ be the signal value at $(i, j, k)$ position of $A$ if $A$ is  $3-$ dimensional. \\
+	 	Let $q$ denote the $\alpha^{\text{th}}$ percentile of the signal values of $A$. \\
+	 	$S = \{ (i,j) \hspace{2mm} | \hspace{2mm} a_{ij} > q  \} $ for 2-dimensional $A$ and 
+	 	$S = \{ (i,j, k) \hspace{2mm} | \hspace{2mm} a_{ijk} > q  \} $ for 3-dimensional $A$. \\
+	 	$ B = A|_S$, i.e. signal values of $A$ in $S$ locations. \\
+	 	Using DBSCAN cluster B using $\epsilon$ and {\it minPts}. \\
+	 	This clustering gives each $s \in A|_S$ a cluster id. \\
+	  	%Convert $A$ to a mesh-grid format $B$, i.e. $B$ contains 2D/3D grid coordinates and the value of each cell of $A$.  \;
+	    %Of the cell values, get the positions and values of $B$ greater than $\alpha^{\text{th}}$ percentile. \;
+	    %Using DBSCAN cluster the chosen cells using $\epsilon$ and {\it minPts}. \;
 	 	
 	 	Consider each cluster as a event. \, 
 	 	\caption{\footnotesize Extract events from a dataset or window}
@@ -370,7 +381,7 @@
 	\section{Applications} \label{sec:Experiments}
 	% =======================================================================
 	The R code applicable to this section is available in the supplementary material.
-	\subsection{Synthetic data}
+	\subsection{Synthetic data}\label{subsec:Synthetic}
 	\subsubsection{Description}
  	The synthetic data used in this section can be generated from the R package {\it eventstream}. The synthetic data contains events of two classes: A and B. All events belonging to class A look similar, that is they have one single non-standard shape or visual pattern. In contrast, events belonging to class B  can have one of three different non-standard shapes, including the shape of events of class-A. The use of three different shapes for class B events and one shape for class A events with that shape being common with those of class B was motivated from the real-world application. 
  	
