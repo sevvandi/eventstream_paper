@@ -1,7 +1,8 @@
 \documentclass[a4paper,11pt]{article}
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
-\usepackage{mathptmx, amsfonts, mathrsfs, microtype}
+\usepackage{newtxtext,newtxmath}
+\usepackage{amsfonts, mathrsfs, microtype}
 \usepackage{amsmath, bm}
 \usepackage[showonlyrefs]{mathtools}
 \usepackage{paralist, parskip}
@@ -200,7 +201,7 @@ Figure~\ref{fig:blobs_A_B} shows a  synthetic dataset generated from the package
 
 \subsection{Features}\label{sec:Featurelist}
 
-As we work with a data stream, we use a moving window model in our experiments. We extract events from data in the current window and compute features for these events. The feature set comprises of some basic features such as length and width of each event, and some other features that compute the intensity of each event relative to the background. ``Relative to the background'' features are motivated from the application (see Figure~\ref{fig:1}) and are only computed for two-dimensional data streams.
+As we work with a data stream, we use a moving window model in our experiments. We extract events from data in the current window and compute features for these events. The feature set comprises some basic features such as length and width of each event, and some other features that compute the intensity of each event relative to the background. ``Relative to the background'' features are motivated from the application (see Figure~\ref{fig:1}) and are only computed for two-dimensional data streams.
 
 To compute the ``relative to the background'' features we use smoothing splines. Using a small portion from the beginning of each window we compute the mean, median, IQR and standard deviation for each location. Using these values at each location, we compute four smoothing splines. The objective is to have the background mean, median, IQR and standard deviation pixel value for each location. The median and IQR splines from a small window in Figure~\ref{fig:Im_Splines} are shown in Figures~\ref{fig:Spline_Median} and~\ref{fig:Spline_IQR}. %This enables the computation of event strength or intensity relative to the background.
 
@@ -271,7 +272,7 @@ We consider the question ``how can we classify partial observations?'' If one tr
 
 % =======================================================================
 % =======================================================================
-\section{Developing-Events Classifiers} \label{sec:ExtendedClassifier}
+\section{Developing-events classifiers}\label{sec:ExtendedClassifier}
 % =======================================================================
 
 %Another option is to extend a standard classifier in time in the following manner.
@@ -279,49 +280,49 @@ Let the standard classifier minimize the loss function given by $\mathscr{L}$, i
 $$
   \argmin_\beta \frac{1}{N}\sum_{i=1}^N \mathscr{L}(\bm{x}_i,y_i;\beta) \, ,
 $$
-where $\beta = \left( \beta_0, \beta_1, \dots, \beta_l \right)$ and $(\bm{x}_i, y_i)$ are observations for $i \in \{ 1, \dots N \}$. By extending a classifier, to take in partial observations, we initially minimize the following loss function,
+where $\beta = \left( \beta_0, \beta_1, \dots, \beta_l \right)$ and $(\bm{x}_i, y_i)$ are observations for $i \in \{ 1, \dots, N \}$. By extending a classifier to take in partial observations, we initially minimize the following loss function,
 $$
-  \argmin_{\tilde{\beta}} \frac{1}{nN} \sum_{i=1}^N \sum_{j=1}^n \mathscr{L} \left( \bm{p}^i_{t_j},y_i;\tilde{\beta} \right) \, ,
+  \argmin_{\tilde{\beta}} \frac{1}{nN} \sum_{i=1}^N \sum_{j=1}^n \mathscr{L} ( \bm{p}^i_{t_j},y_i;\tilde{\beta}) \, ,
 $$
-where $ \tilde{\beta} = \{ \tilde{\beta}_{jk} \}$ for $ j \in \{1, \dots n\}$, \, $ k \in \{0, 1, \dots l \} $ and $\bm{x}_j$ gradually becomes available as $\{\bm{p}^j_{t_1},\bm{p}^j_{t_2}, \bm{p}^j_{t_3}, \dots, \bm{p}^j_{t_n} \}$ with $\bm{x}_j = \bm{p}_{t_n}^j$ . Here for a given $j$, $y_j$ is the class label of $\bm{x}_j$, and as such for all $k$, $\bm{p}^j_{t_k}$ have the same $y_j$. Let us call this initial extended classifier $\mathscr{E}$.
+where $ \tilde{\beta} = \{ \tilde{\beta}_{jk} \}$ for $ j \in \{1, \dots, n\}$, \, $ k \in \{0, 1, \dots, l \} $ and $\bm{x}_j$ gradually becomes available as $\{\bm{p}^j_{t_1},\bm{p}^j_{t_2}, \bm{p}^j_{t_3}, \dots, \bm{p}^j_{t_n} \}$ with $\bm{x}_j = \bm{p}_{t_n}^j$ . For a given $j$, $y_j$ is the class label of $\bm{x}_j$, and so for all $k$, $\bm{p}^j_{t_k}$ have the same $y_j$. Let us call this initial extended classifier $\mathscr{E}$.
 
-We note that $\mathscr{E}$ is the same as having a series of $n$ classifiers $\{C_{t_j}\}_{j=1}^n $. To show this first note that $C_{t_j} $ minimizes the loss function
+We note that $\mathscr{E}$ is the same as having a series of $n$ classifiers $\{C_{t_j}\}_{j=1}^n $. To show this, first note that $C_{t_j} $ minimizes the loss function
 $$
-  \argmin_{\tilde{\beta}_j} \frac{1}{N} \sum_{i=1}^N \mathscr{L} \left( \bm{p}^i_{t_j},y_i;\tilde{\beta}_j \right) \, ,
+  \argmin_{\tilde{\beta}_j} \frac{1}{N} \sum_{i=1}^N \mathscr{L} ( \bm{p}^i_{t_j},y_i;\tilde{\beta}_j ) \, ,
 $$
-with $\tilde{\beta}_j = \left( \tilde{\beta}_{j0}, \tilde{\beta}_{j1}, \tilde{\beta}_{j2}, \dots, \tilde{\beta}_{jl} \right)$. Also,
+with $\tilde{\beta}_j = ( \tilde{\beta}_{j0}, \tilde{\beta}_{j1}, \tilde{\beta}_{j2}, \dots, \tilde{\beta}_{jl})$. Also,
 \begin{equation}\label{eq:4_1}
-	\argmin_{\tilde{\beta}} \sum_{i=1}^N \sum_{j=1}^n \mathscr{L} \left( \bm{p}^i_{t_j},y_i;\tilde{\beta} \right) = \argmin_{\tilde{\beta}} \sum_{j=1}^n \sum_{i=1}^N \mathscr{L} \left( \bm{p}^i_{t_j},y_i;\tilde{\beta} \right) \, .
+	\argmin_{\tilde{\beta}} \sum_{i=1}^N \sum_{j=1}^n \mathscr{L} ( \bm{p}^i_{t_j},y_i;\tilde{\beta}) = \argmin_{\tilde{\beta}} \sum_{j=1}^n \sum_{i=1}^N \mathscr{L} ( \bm{p}^i_{t_j},y_i;\tilde{\beta} ) \, .
 \end{equation}
 In addition $\{\bm{p}^i_{t_j}\}_{i=1}^N$ for a fixed age $t_j$ only affects $\tilde{\beta}_j$. Therefore the matrix $\tilde{\beta} $ can be computed row by row by minimizing $\sum_{i=1}^N \mathscr{L} \left( \bm{p}^i_{t_j},y_i;\tilde{\beta}_j \right)$ for each $j$. Thus, we can write
 \begin{equation}\label{eq:4_2}
-	\argmin_{\tilde{\beta}} \sum_{j=1}^n \sum_{i=1}^N \mathscr{L} \left( \bm{p}^i_{t_j},y_i;\tilde{\beta} \right) = \left[\argmin_{\tilde{\beta}_1} \sum_{i=1}^N \mathscr{L} \left( \bm{p}^i_{t_1},y_i;\tilde{\beta}_1 \right) \cdots \argmin_{\tilde{\beta}_n} \sum_{i=1}^N \mathscr{L} \left( \bm{p}^i_{t_n},y_i;\tilde{\beta}_n \right) \right]^T \, .
+	\argmin_{\tilde{\beta}} \sum_{j=1}^n \sum_{i=1}^N \mathscr{L} \left( \bm{p}^i_{t_j},y_i;\tilde{\beta} \right) = \left[\argmin_{\tilde{\beta}_1} \sum_{i=1}^N \mathscr{L} \left( \bm{p}^i_{t_1},y_i;\tilde{\beta}_1 \right) \cdots \argmin_{\tilde{\beta}_n} \sum_{i=1}^N \mathscr{L} \left( \bm{p}^i_{t_n},y_i;\tilde{\beta}_n \right) \right]^T \!\!.
 \end{equation}
 %$$ \sum_{j=1}^n \left( \argmin_{\tilde{\beta}_j} \sum_{i=1}^N \mathscr{L} \left( \bm{p}^i_{t_j},y_i;\tilde{\beta}_j \right) \right) $$
 From equations \eqref{eq:4_1} and \eqref{eq:4_2} we see that the initial extended classifier $\mathscr{E}$ is the same as having a series of $n$ classifiers $\{C_{t_j}\}_{j=1}^n $.
 
-Having $n$ independent classifiers $\left\{C_{t_j}\right\}_{j=1}^n $ will make the class boundaries for each classifier independent of each other. As $\bm{x}_i \in \mathbb{R}^b$, the class boundary of $C_{t_j} $ lives in the ambient space $\mathbb{R}^{b}$. Let us denote the class boundary of $C_{t_j}$ by $B_j$ and the class boundary of $\mathscr{E}$ by $B_{\mathscr{E}}$. As $n$ independent classifiers $\left \{C_{t_j} \right \}_{j=1}^n $ in totality are equivalent to $\mathscr{E}$, it follows that the class boundary $ B_{\mathscr{E}} $ comprises of the set $\left\{ B_j \right\}_{j=1}^n $. By stacking $ B_j $ in the order of increasing $j$, i.e. by considering the set $\left \{ \left(t_j, B_j \right) \right \}_{j=1}^n $, we can visualize a continuous class boundary that connects the set $\left\{ B_j \right\}_{j=1}^n $ with increasing $t_j$. This continuous class boundary lives in $\mathbb{R}^{b+1}$. Thus, the set $\left \{ \left(t_j, B_j \right) \right \}_{j=1}^n $ can be viewed as a discrete approximation of a continuous class boundary. Therefore, $B_{\mathscr{E}}$ can be viewed as living in $\mathbb{R}^{b+1}$.
+Having $n$ independent classifiers $\left\{C_{t_j}\right\}_{j=1}^n $ will make the class boundaries for each classifier independent of each other. As $\bm{x}_i \in \mathbb{R}^b$, the class boundary of $C_{t_j} $ lives in the ambient space $\mathbb{R}^{b}$. Let us denote the class boundary of $C_{t_j}$ by $B_j$ and the class boundary of $\mathscr{E}$ by $B_{\mathscr{E}}$. As $n$ independent classifiers $\left \{C_{t_j} \right \}_{j=1}^n $ in totality are equivalent to $\mathscr{E}$, it follows that the class boundary $ B_{\mathscr{E}} $ comprises the set $\left\{ B_j \right\}_{j=1}^n $. By stacking $ B_j $ in the order of increasing $j$, i.e. by considering the set $\left \{ \left(t_j, B_j \right) \right \}_{j=1}^n $, we can visualize a continuous class boundary that connects the set $\left\{ B_j \right\}_{j=1}^n $ with increasing $t_j$. This continuous class boundary lives in $\mathbb{R}^{b+1}$. Thus, the set $\left \{ \left(t_j, B_j \right) \right \}_{j=1}^n $ can be viewed as a discrete approximation of a continuous class boundary. Therefore, $B_{\mathscr{E}}$ can be viewed as living in $\mathbb{R}^{b+1}$.
 
-In addition, it is desirable if $B_{\mathscr{E}}$ has a certain level of smoothness. To incorporate smoothness to $B_{\mathscr{E}}$, we modify the original loss function by including an $L_2$ penalty term as follows:
+In addition, it is desirable if $B_{\mathscr{E}}$ has a certain level of smoothness. To incorporate smoothness in $B_{\mathscr{E}}$, we modify the original loss function by including an $L_2$ penalty term as follows:
 \begin{equation}\label{eq:ExtParCl_1}
 	\varphi\left(\tilde{\beta}, \lambda \right) = \frac{1}{nN} \sum_{i=1}^N \sum_{j=1}^n \mathscr{L} \left( \bm{p}^i_{t_j},y_i;\tilde{\beta} \right) + \lambda \sum_{k=1}^l\sum_{j=1}^{n-1} \left(\tilde{\beta}_{j+1,k} - \tilde{\beta}_{j,k} \right)^2 \, ,
 \end{equation}
-for some $\lambda >0 $. The constant $\lambda$ is a parameter that can be specified. Recall that $\tilde{\beta}_j = \left( \tilde{\beta}_{j1}, \tilde{\beta}_{j2}, \dots, \tilde{\beta}_{jl} \right)$ relates to partial observations $\left \{ \bm{p}^i_{t_j} \right \}_{i=1}^N$ for a fixed $t_j$, i.e. $\tilde{\beta}_{j1}$ is the coefficient of the first covariate at age $t_j$ and $\tilde{\beta}_{j2}$ the coefficient of the second covariate at age $t_j$. Thus the penalty term $ \left(\tilde{\beta}_{j+1,k} - \tilde{\beta}_{j,k} \right)^2$ takes coefficients for the $k$th covariate at ages $t_j$ and $t_{j+1}$ and penalizes the difference, enforcing a certain smoothness in time. We minimize the loss function described by equation \eqref{eq:ExtParCl_1} in our proposed classifier. As we use this classifier to classify developing events, we call this the \textit{developing-events classifier}.
+for some $\lambda >0 $. The constant $\lambda$ is a parameter that can be specified. Recall that $\tilde{\beta}_j = \left( \tilde{\beta}_{j1}, \tilde{\beta}_{j2}, \dots, \tilde{\beta}_{jl} \right)$ relates to partial observations $\{ \bm{p}^i_{t_j}\}_{i=1}^N$ for a fixed $t_j$, i.e. $\tilde{\beta}_{j1}$ is the coefficient of the first covariate at age $t_j$ and $\tilde{\beta}_{j2}$ the coefficient of the second covariate at age $t_j$. Thus the penalty term $(\tilde{\beta}_{j+1,k} - \tilde{\beta}_{j,k})^2$ takes coefficients for the $k$th covariate at ages $t_j$ and $t_{j+1}$ and penalizes the difference, enforcing a certain smoothness in time. We minimize the loss function described by equation \eqref{eq:ExtParCl_1} in our proposed classifier. As we use this classifier to classify developing events, we call this the \textit{developing-events classifier}.
 \begin{equation}\label{eq:ExtParCl_2}
-	\argmin_{\tilde{\beta}} \varphi\left(\tilde{\beta}, \lambda \right) = 	\argmin_{\tilde{\beta}} \left( \frac{1}{nN} \sum_{i=1}^N \sum_{j=1}^n \mathscr{L} \left( \bm{p}^i_{t_j},y_i;\tilde{\beta} \right) + \lambda \sum_{k=1}^l\sum_{j=1}^{n-1} \left(\tilde{\beta}_{j+1,k} - \tilde{\beta}_{j,k} \right)^2 \right) \, .
+	\argmin_{\tilde{\beta}} \varphi\left(\tilde{\beta}, \lambda \right) = 	\argmin_{\tilde{\beta}} \left( \frac{1}{nN} \sum_{i=1}^N \sum_{j=1}^n \mathscr{L} ( \bm{p}^i_{t_j},y_i;\tilde{\beta} ) + \lambda \sum_{k=1}^l\sum_{j=1}^{n-1} (\tilde{\beta}_{j+1,k} - \tilde{\beta}_{j,k} )^2 \right) \, .
 \end{equation}
 
-This is a general formulation for an developing-events classifier, i.e. any loss function $\mathscr{L}$ can be used in equation \eqref{eq:ExtParCl_2}. In our R package \textit{eventstream} we implement the developing-events classifier for logistic regression. For logistic regression \cite{friedman2001elements}, the loss function $\mathscr{L}$ is given by
+This is a general formulation for an developing-events classifier, i.e. any loss function $\mathscr{L}$ can be used in equation \eqref{eq:ExtParCl_2}. In our R package \textit{eventstream}, we implement the developing-events classifier for logistic regression \cite{friedman2001elements}, where the loss function $\mathscr{L}$ is given by
 \begin{equation}\label{eq:LogReg}
 	\mathscr{L} \left( \bm{p}^i_{t_j},y_i;\tilde{\beta} \right) = - y_i \cdot \left( \left[ 1 \, \, \left( \bm{p}^i_{t_j}\right)^T \right] \tilde{\beta}_{j} \right) + \log \left( 1+ e^{ \left[ 1 \, \, \left( \bm{p}^i_{t_j}\right)^T \right] \tilde{\beta}_{j}} \right) \, .
 \end{equation}
-Here the vector $\left[ 1 \, \, \left( \bm{p}^i_{t_j}\right)^T \right]$ denotes the concatenation of the vector $\bm{p}^i_{t_j}$ with the constant $1$ to account for the intercept in logistic regression. %We refer to our developing-events classifier for logistic regression by $\mathscr{P}$ in the following sections.
+Here the vector $[1 \,\, ( \bm{p}^i_{t_j})^T]$ denotes the concatenation of the vector $\bm{p}^i_{t_j}$ with the constant $1$ to account for the intercept. %We refer to our developing-events classifier for logistic regression by $\mathscr{P}$ in the following sections.
 
 Next we explore a non-Gaussian state space model for partial observations.
 
 % =======================================================================
 % =======================================================================
-\section{Cascaded non-Gaussian state space models} \label{sec:CascadedDLM}
+\section{Cascaded non-Gaussian state space models}\label{sec:CascadedDLM}
 % =======================================================================
 
 We use non-Gaussian state space models as described in \cite{durbin1998time} and \cite{mccormick2012dynamic} to model partial observations and the implementation in R package \textit{dma} \cite{dma} that uses dynamic model averaging. We start with the linear Gaussian state space models which are given by the following equations :
@@ -383,7 +384,7 @@ However, communication between models $\Lambda_{k-1}$ and $\Lambda_k$ may not im
 We use developing-events classifiers and cascaded state space models to classify events in synthetic and real data streams.
 
 % =======================================================================
-\section{Applications} \label{sec:Experiments}
+\section{Applications}\label{sec:Experiments}
 % =======================================================================
 
 The R code applicable to this section is available in the supplementary material.
