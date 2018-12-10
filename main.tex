@@ -24,7 +24,6 @@
  {labelfont={bf},textfont={it},labelsep=colon}
 \captionsetup[figure]{style=italic,format=hang,singlelinecheck=true}
 \captionsetup[table]{style=italic,format=hang,singlelinecheck=true}
-\captionsetup[algorithm]{style=italic,format=hang,singlelinecheck=true}
 
 %% LINE AND PAGE BREAKING
 \allowdisplaybreaks
@@ -46,6 +45,7 @@
 
 \DeclareMathOperator*{\argmin}{arg\,min}
 \DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\E}{E}
 
 % =======================================================================
 \begin{document}
@@ -101,7 +101,7 @@ We are interested in events that start, develop for some time, and stop at a cer
 
 For events with age-varying behaviour, standard classification techniques may not be suitable, especially if early detection is important. This is because the event features may change as the event progresses, such that an accurate feature vector can only be computed after the event is finished. For applications where early classification is important, this is not satisfactory as one cannot wait until the event finishes before classifying it. While the event is still progressing, we have access to incomplete/partial information, giving rise to a premature/incomplete feature vector. Our focus is on classifying events using this premature feature vector. To do this we incorporate age-varying coefficients in our model similar to other varying-coefficients models \cite{hastie1993varying}. A linear model with age-varying coefficients is given by
 \begin{equation}\label{eq:Int1}
-	y_t = a_0(t) + a_1(t) x_1(t) + \dots + a_b(t)x_b(t) + \epsilon_t \, ,
+	y_t = a_0(t) + a_1(t) x_1(t) + \dots + a_b(t)x_b(t) + \varepsilon_t \, ,
 \end{equation}
 where $y_t$ is the output at age $t$, $a_i(t)$ are the age-varying coefficients, and $x_i(t)$ are the attributes of the event at age $t$. A logistic model with age-varying coefficients is given by Equations \eqref{eq:Int1} and \eqref{eq:Int2}:
 \begin{equation}\label{eq:Int2}
@@ -119,7 +119,7 @@ We explore early event classification using two approaches that are based on dif
 
 Our proposed framework, depicted in Figure~\ref{fig:1} can be used in applications that give rise to spatio-temporal events with contiguous spatial dimensions. Typically, pre-processing is also a common step done before event extraction. However we do not focus on pre-processing data as techniques differ depending on the application. As event extraction is needed before classification, we also propose a simple method for event extraction. We make this work available in the R package \textit{eventstream} \cite{Ref??}.
 
-\begin{figure}
+\begin{figure}[!hb]
 	\begin{tikzpicture}[node distance=2cm]
 		\node (start) [standard] {Data Stream};
 		\node (extract) [standard, right of=start, xshift=1.5cm] {Event \\ Extraction};
@@ -162,16 +162,16 @@ In Section~\ref{sec:Experiments} we discuss results of our framework using synth
 We extract events from data streams of 2 or 3 dimensions; i.e. 1 spatial $\times$ 1 time dimension or 2 spatial $ \times $ 1 time dimension. We employ a simple method for event extraction using DBSCAN \cite{ester1996density}, which is a density based clustering algorithm. Our event extraction algorithm is explained in Algorithm~\ref{algo:events_extraction}.
 
 \DontPrintSemicolon
-\begin{algorithm}\small
-	\SetKwInOut{Input}{input}
+\begin{algorithm}\fontsize{9}{10}\selectfont
+	\SetKwInOut{Input}{input~~~}
 	\SetKwInOut{Output}{output}
-	\Input{a 2 or 3-dimensional array $A_{n\times m}$ or $A_{n\times m \times k}$ , and parameters $\alpha$, $\epsilon$ and \textit{minPts}. }
-	\Output{events: $A|_S \subset A$ and the event ids for each $s_{ij} \in A|_S$ (or $s_{ijk}$ if $A$ is 3-dimensional.)}
+	\Input{~a 2 or 3-dimensional array $A_{n\times m}$ or $A_{n\times m \times k}$ , and parameters $\alpha$, $\epsilon$ and \textit{minPts}.}
+	\Output{~events $A|_S \subset A$ and the event ids for each $s_{ij} \in A|_S$ (or $s_{ijk}$ if $A$ is 3-dimensional).}
 	Let $a_{ij}$ be the signal value at $(i, j)$ position of $A$, if $A$ is 2-dimensional and $a_{ijk}$ be the signal value at $(i, j, k)$ position of $A$ if $A$ is $3-$ dimensional. \\
 	Let $q$ denote the $\alpha$-percentile of the signal values of $A$. \\
 	$S = \{ (i,j) \mid a_{ij} > q \} $ for 2-dimensional $A$ and
 	$S = \{ (i,j, k) \mid a_{ijk} > q \} $ for 3-dimensional $A$. \\
-	$ B = A|_S$, i.e. signal values of $A$ in $S$ locations. \\
+	$ B = A|_S$, i.e., signal values of $A$ in $S$ locations. \\
 	Using DBSCAN cluster B using $\epsilon$ and \textit{minPts}. \\
 	This clustering gives each $s \in A|_S$ a cluster id. \\
 	%Convert $A$ to a mesh-grid format $B$, i.e. $B$ contains 2D/3D grid coordinates and the value of each cell of $A$. \;
@@ -205,7 +205,7 @@ As we work with a data stream, we use a moving window model in our experiments. 
 
 To compute the ``relative to the background'' features we use smoothing splines. Using a small portion from the beginning of each window we compute the mean, median, IQR and standard deviation for each location. Using these values at each location, we compute four smoothing splines. The objective is to have the background mean, median, IQR and standard deviation pixel value for each location. The median and IQR splines from a small window in Figure~\ref{fig:Im_Splines} are shown in Figures~\ref{fig:Spline_Median} and~\ref{fig:Spline_IQR}. %This enables the computation of event strength or intensity relative to the background.
 
-\begin{figure}
+\begin{figure}[!hb]
 	\centering
 	\subfloat[][]{
 		\includegraphics[scale=0.35]{./Graphics/Image_for_Splines.pdf} %
@@ -314,7 +314,7 @@ for some $\lambda >0 $. The constant $\lambda$ is a parameter that can be specif
 
 This is a general formulation for an developing-events classifier, i.e. any loss function $\mathscr{L}$ can be used in equation \eqref{eq:ExtParCl_2}. In our R package \textit{eventstream}, we implement the developing-events classifier for logistic regression \cite{friedman2001elements}, where the loss function $\mathscr{L}$ is given by
 \begin{equation}\label{eq:LogReg}
-	\mathscr{L} \left( \bm{p}^i_{t_j},y_i;\tilde{\beta} \right) = - y_i \cdot \left( \left[ 1 \, \, \left( \bm{p}^i_{t_j}\right)^T \right] \tilde{\beta}_{j} \right) + \log \left( 1+ e^{ \left[ 1 \, \, \left( \bm{p}^i_{t_j}\right)^T \right] \tilde{\beta}_{j}} \right) \, .
+	\mathscr{L} (\bm{p}^i_{t_j},y_i;\tilde{\beta}) = - y_i \left( [ 1 \,\, ( \bm{p}^i_{t_j})^T] \tilde{\beta}_{j} \right) + \log \left( 1+ \exp\big\{[ 1 \, \,( \bm{p}^i_{t_j})^T ] \tilde{\beta}_{j}\big\} \right) \, .
 \end{equation}
 Here the vector $[1 \,\, ( \bm{p}^i_{t_j})^T]$ denotes the concatenation of the vector $\bm{p}^i_{t_j}$ with the constant $1$ to account for the intercept. %We refer to our developing-events classifier for logistic regression by $\mathscr{P}$ in the following sections.
 
@@ -325,69 +325,69 @@ Next we explore a non-Gaussian state space model for partial observations.
 \section{Cascaded non-Gaussian state space models}\label{sec:CascadedDLM}
 % =======================================================================
 
-We use non-Gaussian state space models as described in \cite{durbin1998time} and \cite{mccormick2012dynamic} to model partial observations and the implementation in R package \textit{dma} \cite{dma} that uses dynamic model averaging. We start with the linear Gaussian state space models which are given by the following equations :
+We use non-Gaussian state space models as described in \cite{durbin1998time} and \cite{mccormick2012dynamic} to model partial observations, and apply dynamic model averaging as implemented in the R package \textit{dma} \cite{dma}. We start with the linear Gaussian state space models which are given by the following equations :
 \begin{align}
-	y_t          & = Z_t \alpha_t + \epsilon_t \, , \label{eq:DLM_1} \\
+	y_t          & = Z_t \alpha_t + \varepsilon_t \, , \label{eq:DLM_1} \\
 	\alpha_{t+1} & = T_t \alpha_t + R_t \eta_t \, , \label{eq:DLM_2}
 \end{align}
-where $\epsilon_t \in N \left(0, H_t\right)$, $\eta_t \in M \left(0, Q_t\right)$ and $\alpha_1 \in \left(0, Q_t\right)$. Here $y_t$ is a $N \times 1 $ vector of observations and $\alpha_t$ is a $(l+1) \times 1$ state vector. Equation \eqref{eq:DLM_1} is called the observation equation and equation \eqref{eq:DLM_2} is called the state equation. When using state space models for dynamic regression, $\alpha_t$ denotes the coefficients which update dynamically.
+where $\varepsilon_t \in N \left(0, H_t\right)$, $\eta_t \in M \left(0, Q_t\right)$ and $\alpha_1 \in \left(0, Q_t\right)$. Here $y_t$ is an $N$-vector of observations and $\alpha_t$ is a $(l+1)$-dimensional state vector. Equation \eqref{eq:DLM_1} is the ``observation equation'' and equation \eqref{eq:DLM_2} is the ``state equation''. When using state space models for dynamic regression, $\alpha_t$ denotes the coefficients which update dynamically.
 
-If the observations $y_t$ come from the exponential family distributions the equations change as follows:
+If the observations $y_t$ come from an exponential family distribution, the equations change as follows:
 \begin{align}
 	\theta_t     & = Z_t \alpha_t \, , \label{eq:GDLM_2}              \\
 	\alpha_{t+1} & = T_t \alpha_t + R_t \eta_t \, , \label{eq:GDLM_3}
 \end{align}
-with $E \left( y_t \right ) = \mu_t $ and $f\left( \mu_t \right ) = \theta_t $ where $f$ is an appropriate link function. For binomial distribution the logit function $f(t)=\log\left( \frac{t}{1-t}\right)$ is used as the link.
+with $\E(y_t) = \mu_t $ and $f(\mu_t) = \theta_t $ where $f$ is an appropriate link function. For a binomial distribution, the logit function $f(t)=\log(t/(1-t))$ is used as the link.
 
 \subsection{Modelling partial observations}
 
-We are interested in a growing prediction $\{\theta^j_{t_1}, \theta^j_{t_2}, \ldots, \theta^j_{t_n} \}$ for partial observations $\{\bm{p}^j_{t_1},\bm{p}^j_{t_2}, \bm{p}^j_{t_3}, \ldots \bm{p}^j_{t_n}\}$. Again, we note that for partial observations $\{\bm{p}^j_{t_1},\bm{p}^j_{t_2}, \bm{p}^j_{t_3}, \ldots \bm{p}^j_{t_n}\}$, the time stamps $(t_1, t_2, \ldots, t_n)$ denote the ages of the partial observations, not the time of occurrence. % As such, we want the prediction $\theta^j_{t_k}$ to be more confident as the age ${t_k}$ grows. This is what we mean by a growing prediction$\left\{ \theta^j_{t_1}, \theta^j_{t_2}, \dots, \theta^j_{t_n} \right\}$ .
+We are interested in a growing prediction $\{\theta^j_{t_1}, \theta^j_{t_2}, \dots, \theta^j_{t_n} \}$ for partial observations $\{\bm{p}^j_{t_1},\bm{p}^j_{t_2}, \bm{p}^j_{t_3}, \ldots \bm{p}^j_{t_n}\}$. Again, we note that for partial observations $\{\bm{p}^j_{t_1},\bm{p}^j_{t_2}, \bm{p}^j_{t_3}, \ldots \bm{p}^j_{t_n}\}$, the time stamps $(t_1, t_2, \ldots, t_n)$ denote the ages of the partial observations, not the time of occurrence. % As such, we want the prediction $\theta^j_{t_k}$ to be more confident as the age ${t_k}$ grows. This is what we mean by a growing prediction$\left\{ \theta^j_{t_1}, \theta^j_{t_2}, \dots, \theta^j_{t_n} \right\}$ .
 
 %$\left\{ \theta^j_{t_1}, \theta^j_{t_2}, \dots, \theta^j_{t_n} \right\}$
 % $\left\{ y^j_{t_1}, y^j_{t_2}, \dots, y^j_{t_n} \right\}$
 As state space models generally deal with time, for each age $t_k$ we use a separate state space model. However, for some cases it may benefit if there is communication between the models regarding the same observation. To add communication between the models, we bundle the partial observation $\bm{p}^j_{t_k}$ with the prediction output $\theta^j_{t_{k-1}}$ of the lower age model and use it as input for the age $t_k$ model. % For example the prediction of partial observation $\bm{p}^j_{t_1}$ is given by one state space model and the prediction of $\bm{p}^j_{t_2}$ is given by another model without any link between the two.
 
-To explain this further, let us define $\bm{P}_{t_k} = \left[ \bm{p}^1_{t_k}\, \bm{p}^2_{t_k}\, \cdots \, \bm{p}^N_{t_k} \right]^T$, $\bm{1} = \left[ 1, 1, \dots, 1\right]^T$ and $\theta_{t_k} = \left[\theta^1_{t_k}, \theta^2_{t_k}, \dots, \theta^N_{t_k} \right]^T$, where $\bm{p}^j_{t_k}$ is a $l \times 1 $ vector and $N$ denotes the number of complete observations. Here $\bm{P}_{t_k}$ is a $l \times N$ matrix containing all partial observations of age $t_k$. Then the equation corresponding to equation \eqref{eq:GDLM_2} for the initial model for age $t_1$ can be written as
+To explain this further, let us define $\bm{P}_{t_k} = \left[ \bm{p}^1_{t_k}\, \bm{p}^2_{t_k}\, \cdots \, \bm{p}^N_{t_k} \right]^T$, $\bm{1} = \left[ 1, 1, \dots, 1\right]^T$ and $\theta_{t_k} = \left[\theta^1_{t_k}, \theta^2_{t_k}, \dots, \theta^N_{t_k} \right]^T$, where $\bm{p}^j_{t_k}$ is a $l$-vector and $N$ denotes the number of complete observations. Here $\bm{P}_{t_k}$ is an $l \times N$ matrix containing all partial observations of age $t_k$. Then the equation corresponding to equation \eqref{eq:GDLM_2} for the initial model for age $t_1$ can be written as
 % and $\bm{y}_{t_k} = \left\{ y^1_{t_k}, y^2_{t_k}, \dots, y^N_{t_k} \right\}$ and $\bm{y}_{t_k}$ an $N \times 1 $ vector containing all class labels.
 \begin{align}
-	\theta_{t_1}                       & = Z_{t_1} \alpha_{t_1} \, . \label{eq:OurMod2}                     \\
-	\text{with} \qquad Z_{t_1} & = \left[ \bm{1} \, \, \bm{P}_{t_1} \right] \, , \label{eq:OurMod1}
+	\theta_{t_1} & = Z_{t_1} \alpha_{t_1} \, . \label{eq:OurMod2}                     \\
+	\text{with} \qquad
+       Z_{t_1} & = [ \bm{1} \, \, \bm{P}_{t_1} ] \, , \label{eq:OurMod1}
 \end{align}
-Using the output $\theta_{t_1}$ we write the model for age $t_2$ as
+Using the output $\theta_{t_1}$, we write the model for age $t_2$ as
 \begin{align}
-	Z_{t_2}      & = \left[ \bm{1} \, \, \bm{P}_{t_2} \, \, \theta_{t_1} \right] \, ,\label{eq:OurMod3} \\
+	Z_{t_2}      & = [ \bm{1} \, \, \bm{P}_{t_2} \, \, \theta_{t_1}] \, ,\label{eq:OurMod3} \\
 	\theta_{t_2} & = Z_{t_2} \alpha_{t_2} \, . \label{eq:OurMod4}
 \end{align}
-Building this way we obtain
+Building in this way we obtain
 \begin{align}
-	Z_{t_k}      & = \left[ \bm{1} \, \, \bm{P}_{t_k} \, \, \theta_{k_{t-1}} \right] \, , \label{eq:OurMod5} \\
+	Z_{t_k}      & = [ \bm{1} \, \, \bm{P}_{t_k} \, \, \theta_{k_{t-1}}] \, , \label{eq:OurMod5} \\
 	\theta_{t_k} & = Z_{t_k} \alpha_{t_k} \, . \label{eq:OurMod6}
 \end{align}
-The equations \eqref{eq:OurMod5} , \eqref{eq:OurMod6} and \eqref{eq:GDLM_3} describe the model for the partial observations at age $t_k$. Let us denote the model which describes the partial observations of age $t_k$ by $\Lambda_k$ and the predicted output using the inverse link function by $\hat{\bm{y}}_{t_k}$. Then Figure~\ref{fig:PODLM} gives the structure of our partial observations model.
+The equations \eqref{eq:OurMod5}, \eqref{eq:OurMod6} and \eqref{eq:GDLM_3} describe the model for the partial observations at age $t_k$. Let us denote the model which describes the partial observations of age $t_k$ by $\Lambda_k$ and the predicted output using the inverse link function by $\hat{\bm{y}}_{t_k}$. Then Figure~\ref{fig:PODLM} gives the structure of our partial observations model.
 
-\begin{figure}
+\begin{figure}[!hb]
 	\centering
 	\includegraphics[clip=true,scale=0.8]{./Graphics/Lots_of_circles_3.pdf}
 	\caption{Structure of the partial observations model with communication.}
 	\label{fig:PODLM}
 \end{figure}
 
-However, communication between models $\Lambda_{k-1}$ and $\Lambda_k$ may not improve the overall accuracy for every partial observations problem. For example, for a class imbalanced problem a small number of incorrect predictions in $\theta_{t_{k-1}}$ can have an adverse effect for the model $\Lambda_k$. Therefore, for some instances such as class imbalanced datasets it is desirable to have models $\Lambda_k$ without communication between the models as shown in Figure~\ref{fig:PODLM2}.
+However, communication between models $\Lambda_{k-1}$ and $\Lambda_k$ may not improve the overall accuracy for every partial observations problem. For example, for a class imbalanced problem, a small number of incorrect predictions in $\theta_{t_{k-1}}$ can have an adverse effect on the model $\Lambda_k$. Therefore, for some instances such as class imbalanced datasets, it is desirable to have models $\Lambda_k$ without communication between the models, as shown in Figure~\ref{fig:PODLM2}.
 
-\begin{figure}
+\begin{figure}[!hb]
 	\centering
 	\includegraphics[clip=true,scale=0.8]{./Graphics/Lots_of_circles_4.pdf}
 	\caption{Structure of the partial observations model without communication.}
 	\label{fig:PODLM2}
 \end{figure}
 
-We use developing-events classifiers and cascaded state space models to classify events in synthetic and real data streams.
 
 % =======================================================================
 \section{Applications}\label{sec:Experiments}
 % =======================================================================
 
-The R code applicable to this section is available in the supplementary material.
+We use developing-events classifiers and cascaded state space models to classify events in synthetic and real data streams. The R code applicable to this section is available in the supplementary material.
 
 \subsection{Synthetic data}\label{subsec:Synthetic}
 
@@ -400,7 +400,7 @@ The Figure~\ref{fig:Classes_A_And_B} illustrates the events of classes A and B. 
 %Motivated by the real world dataset shown in Figure~\ref{fig:Real_World_Data} we create a set of synthetic files which mimic some properties of the real world dataset. Each file is a $350 \times 250$ two-dimensional array of cells/pixels. Files contain events from either one or both classes, namely A and B.
 %[trim=0.2cm 0.7cm 1.2cm 2.4cm, clip=true, width=0.48\textwidth]
 
-\begin{figure}
+\begin{figure}[!hbt]
 	\centering
 	\subfloat[][]{
 		\includegraphics[clip=true, scale=0.48]{./Graphics/2_A_Blobs_labels.pdf}
@@ -418,23 +418,21 @@ The number of events of class A and B their positions are randomly generated. Th
 
 \begin{table}[!ht]
 	\centering
-	\caption{Differences in class A and class B events.}
-	\footnotesize
-	\begin{tabular}{p{6cm}p{3.5cm}p{3.5cm}}
+	\begin{tabular}{lll}
 		\toprule
-		Feature                                   & Class A value distribution & Class B value distribution \\
+    Feature                                   & Class A value distribution & Class B value distribution \\
 		\midrule
-		Starting cell/pixel values                & $N(4,3)$                   & $N(2, 3)$                  \\
-		Ending cell/pixel values                  & $N(8,3)$                   & $N(4, 3)$                  \\
-		Maximum age of event - shape 1            & $U(20,30)$                 & $U(20,30)$                 \\
-		Maximum age of event - shape 2            & -                          & $U(100,150)$               \\
-		Maximum age of event - shape 3            & -                          & $U(100,150)$               \\
-		Maximum location width of event - shape 1 & $U(20,26)$                 & $U(20,26)$                 \\
-		Maximum location width of event - shape 2 & -                          & $U(30,38)$                 \\
-		Maximum location width of event - shape 3 & -                          & $U(50,58)$                 \\
+    Starting cell/pixel values                & $N(4,3)$                   & $N(2, 3)$                  \\
+    Ending cell/pixel values                  & $N(8,3)$                   & $N(4, 3)$                  \\
+    Maximum age of event - shape 1            & $U(20,30)$                 & $U(20,30)$                 \\
+    Maximum age of event - shape 2            & -                          & $U(100,150)$               \\
+    Maximum age of event - shape 3            & -                          & $U(100,150)$               \\
+    Maximum location width of event - shape 1 & $U(20,26)$                 & $U(20,26)$                 \\
+    Maximum location width of event - shape 2 & -                          & $U(30,38)$                 \\
+    Maximum location width of event - shape 3 & -                          & $U(50,58)$                 \\
 		\bottomrule
 	\end{tabular}
-	\label{tab:DiffClassAandB}
+	 \caption{Differences in class A and class B events.}\label{tab:DiffClassAandB}
 \end{table}
 
 \subsubsection{Synthetic data results}
@@ -461,18 +459,18 @@ Figure~\ref{fig:3Classifiers} shows the accuracy of the developing-events classi
 
 \begin{table}
 	\centering
-	\caption{Average accuracy $(\%)$ over $5$ repetitions.}
-	\footnotesize
-	\begin{tabular}{p{6cm}p{1cm}p{1cm}p{1cm}p{1cm}}
+	\begin{tabular}{lcccc}
 		\toprule
-		Classifier                   & Accuracy at $t_1$ & Accuracy at $t_2$ & Accuracy at $t_3$ & Accuracy at $t_4$ \\
+    Classifier                   & \multicolumn{4}{c}{Accuracy} \\
+    \cmidrule{2-5}
+                                 & $t_1$ & $t_2$ & $t_3$ & $t_4$ \\
 		\midrule
-		Developing-events classifier & 81                & 90                & 93                & 92                \\
-		Cascaded state space models  & 87                & 89                & 89                & 90                \\
-		Logistic regression          & 75                & 78                & 77                & 78                \\
+    Developing-events classifier & 81    & 90    & 93    & 92    \\
+    Cascaded state space models  & 87    & 89    & 89    & 90    \\
+    Logistic regression          & 75    & 78    & 77    & 78    \\
 		\bottomrule
 	\end{tabular}
-	\label{tab:Results_Synthetic}
+    \caption{Average accuracy $(\%)$ over $5$ repetitions.}\label{tab:Results_Synthetic}
 \end{table}
 
 \begin{figure}
