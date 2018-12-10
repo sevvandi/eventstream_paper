@@ -126,7 +126,7 @@
 	\label{fig:Real_World_Data}
 	\end{figure}
 	
-	Fibre optic sensor cables are used in many applications including optical communications, detecting undersea cable faults \cite{jiang2009technological}, detecting oil leakages \cite{nikles2004leakage}, detecting intruders on secured premises \cite{griffiths1995developments}, monitoring health of infra-structure such as bridges and pipe-lines \cite{li2004recent}, to name a few. Due to its sensitivity, fibre optic cables are also prone to noise. In the dataset in Figure \ref{fig:Real_World_Data}, events are the yellow and yellow-blue parts that stand out. In a setting where early classification is  important, we need to classify these events quickly, preferably while they are still ongoing. In the dataset shown in Figure \ref{fig:Real_World_Data} there are two classes of events: classes A and B. The event approximately at location 30 between the time interval  45 to 60 is of class A while other events that appear between locations 150 and 400  are of class B. Due to the commercially sensitive nature of the dataset, we refrain from giving details about the actual application. However, one can associate events in each of the applications listed above as either belonging to class A or B. For example a cable lying on the sea bed can produce spatio-temporal events that are either cable faults, or non-fault events due to the activity in the ocean. 
+	Fibre optic sensor cables are used in many applications including optical communications, detecting undersea cable faults \cite{jiang2009technological}, detecting oil leakages \cite{nikles2004leakage}, detecting intruders on secured premises \cite{griffiths1995developments}, monitoring health of infra-structure such as bridges and pipe-lines \cite{li2004recent}, to name a few. Due to its sensitivity, fibre optic cables are also prone to noise. In the dataset in Figure \ref{fig:Real_World_Data}, events are the yellow and yellow-blue parts that stand out. In a setting where early classification is  important, we need to classify these events quickly, preferably while they are still ongoing. In the dataset shown in Figure \ref{fig:Real_World_Data} there are two classes of events: classes A and B. For this application class A events are of particular interest, while class B events are background events.  The event approximately at location 30 between the time interval  45 to 60 is of class A while other events that appear between locations 150 and 400  are of class B. Due to the commercially sensitive nature of the dataset, we refrain from giving details about the actual application. However, one can associate events in each of the applications listed above as belonging to class A or B. For example a cable lying on the sea bed can produce spatio-temporal events that are either cable faults (class A), or non-fault events due to the activity in the ocean (class B). 
 	
 	
 	We investigate early classification of spatio-temporal events using the framework in Figure \ref{fig:1}. The remainder of the paper is organized as follows: Section \ref{sec:EventExtract} discusses event extraction and feature computation. Section \ref{sec:Notation}  introduces the notation for classification of developing-events. In Sections \ref{sec:ExtendedClassifier} and  \ref{sec:CascadedDLM} we introduce the developing-events classifier and the cascaded non-Gaussian state space models respectively. %In Section \ref{sec:Experiments}  we discuss the synthetic datasets, and the results of the two early detection methods. 
@@ -147,19 +147,19 @@
 	 	\SetKwInOut{Input}{input}
 	 	\SetKwInOut{Output}{output}
 	 	\Input{a 2 or 3-dimensional array $A_{n\times m}$ or $A_{n\times m \times k}$ , and parameters $\alpha$, $\epsilon$ and {\it minPts}. }
-	 	\Output{events: $A|_S \subset A$  and the event ids for each $s_{ij} \in A|_S$ (or $s_{ijk}$ if $A$ is 3-dimensional. }
-	 	Let $a_{ij}$ be the signal value at $(i, j)$ position of $A$, if $A$ is 2-dimensional and $a_{ijk}$ be the signal value at $(i, j, k)$ position of $A$ if $A$ is  $3-$ dimensional. \\
+	 	\Output{events: $B \subset A$  and the event ids for each $s_{ij} \in B$ (or $s_{ijk}$ if $A$ is 3-dimensional). }
+	 	Let $a_{ij}$ be the signal value at $(i, j)$ position of $A$, if $A$ is 2-dimensional, and $a_{ijk}$  at position $(i, j, k)$ if $A$ is  $3-$ dimensional. \\
 	 	Let $q$ denote the $\alpha^{\text{th}}$ percentile of the signal values of $A$. \\
 	 	$S = \{ (i,j) \hspace{2mm} | \hspace{2mm} a_{ij} > q  \} $ for 2-dimensional $A$ and 
 	 	$S = \{ (i,j, k) \hspace{2mm} | \hspace{2mm} a_{ijk} > q  \} $ for 3-dimensional $A$. \\
 	 	$ B = A|_S$, i.e. signal values of $A$ in $S$ locations. \\
 	 	Using DBSCAN cluster B using $\epsilon$ and {\it minPts}. \\
-	 	This clustering gives each $s \in A|_S$ a cluster id. \\
+	 	This clustering gives each $s \in B$ a cluster id. The cluster id $0$ is given to points which are not part of any cluster, i.e. noise points. \\
 	  	%Convert $A$ to a mesh-grid format $B$, i.e. $B$ contains 2D/3D grid coordinates and the value of each cell of $A$.  \;
 	    %Of the cell values, get the positions and values of $B$ greater than $\alpha^{\text{th}}$ percentile. \;
 	    %Using DBSCAN cluster the chosen cells using $\epsilon$ and {\it minPts}. \;
 	 	
-	 	Consider each cluster as a event. \, 
+	 	Consider each cluster as an event. \, 
 	 	\caption{\footnotesize Extract events from a dataset or window}
 	 	\label{algo:events_extraction}
 	 \end{algorithm}
@@ -176,14 +176,14 @@
 	 		\includegraphics[scale=0.5]{./Graphics/events_extracted.pdf}  % Extracted_Blobs_Class_B_file.pdf
 	 		\label{fig:Class_B_1}
 	 	}
-	 	\caption{\footnotesize A synthetic dataset from {\it eventstream} and the events extracted from it.} 
+	 	\caption{\footnotesize A synthetic dataset from {\it eventstream} and the events extracted from it using $\alpha=0.95$, $\epsilon = 5$ and {\it minPts} $= 10$.} 
 	 	\label{fig:blobs_A_B}
 	 \end{figure}
 	 
 	 \subsection{Features}\label{sec:Featurelist}
-	 As we work with a data stream, we use a moving window model in our experiments. We extract events from data in the current window and compute features for these events. The feature set comprises of some basic features such as length and width of each event, and some other features that compute the intensity of each event relative to the background. ``Relative to the background'' features  are motivated from the real world application (see Figure \ref{fig:1}) and are only computed for two-dimensional data streams.  
+	 As we work with a data stream, we use a moving window model in our experiments. We extract events from data in the current window and compute features for these events. The feature set comprises of some basic features such as length and width of each event, and some other features that compute the intensity of each event relative to the background.  The  ``Relative to the background'' features are equivalent to a family of signal to noise ratio features and are motivated from the real world application (see Figure \ref{fig:1}).   
 	 
-	 To compute the ``relative to the background'' features  we use smoothing splines. Using a small portion from the beginning of each window we compute the mean, median, IQR and standard deviation for each location. Using these values at each location, we compute four smoothing splines. The objective is to have the background mean, median, IQR and standard deviation pixel value for each location.  The median and IQR splines from a small window in Figure \ref{fig:Im_Splines} are shown in Figures \ref{fig:Spline_Median} and \ref{fig:Spline_IQR}. %This enables the computation of event strength or intensity relative to the background.
+	 To compute the SNR family of features  we use smoothing splines and thus they are only computed for two-dimensional data streams due to ease of computation. Using a small portion from the beginning of each window, we compute the mean, median, IQR and standard deviation for each location. Using these values at each location, we compute four smoothing splines. The objective is to have the background mean, median, IQR and standard deviation pixel value for each location.  The median and IQR splines from a small window in Figure \ref{fig:Im_Splines} are shown in Figures \ref{fig:Spline_Median} and \ref{fig:Spline_IQR}. %This enables the computation of event strength or intensity relative to the background.
 	 
 	\begin{figure}[H]
 		 	\centering
