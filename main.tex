@@ -150,7 +150,7 @@ Fibre optic sensor cables are used in many applications including optical commun
 
 In the dataset in Figure~\ref{fig:Real_World_Data}, events are seen in the lighter-coloured parts. The event approximately at location 30 between the time interval 45 to 60 is of class A while other events that appear between locations 150 and 400 are of class B. Due to the commercially sensitive nature of the dataset, we refrain from giving details about the actual application.
 
-We will investigate early classification of spatio-temporal events using the framework in Figure~\ref{fig:1}. The remainder of the paper is organized as follows. Section~\ref{sec:EventExtract} discusses event extraction and feature computation, while Section~\ref{sec:Notation} introduces the notation for classification of developing-events. In Sections~\ref{sec:ExtendedClassifier} and~\ref{sec:CascadedDLM} we introduce the developing-events classifier and the cascaded non-Gaussian state space models respectively. %In Section~\ref{sec:Experiments} we discuss the synthetic datasets, and the results of the two early detection methods.
+We will investigate early classification of spatio-temporal events using the framework in Figure~\ref{fig:1}. The remainder of the paper is organized as follows. Section~\ref{sec:EventExtract} discusses event extraction and feature computation, while Section~\ref{sec:Notation} introduces the notation for classification of age-varying events. In Sections~\ref{sec:ExtendedClassifier} and~\ref{sec:CascadedDLM} we introduce the age-varying events classifier and the cascaded non-Gaussian state space models respectively. %In Section~\ref{sec:Experiments} we discuss the synthetic datasets, and the results of the two early detection methods.
 In Section~\ref{sec:Experiments} we discuss results of our framework using synthetic data and two real applications. The first application is associated with the dataset in Figure~\ref{fig:Real_World_Data} and the second application is on Nitrogen dioxide $(\text{NO}_2)$ data from NASA's NEO \cite{OMINO2} website. Finally, in Section~\ref{sec:Conclusions}, we present our conclusions and discuss future work.
 
 % =======================================================================
@@ -320,7 +320,7 @@ This is a general formulation for an age-varying events classifier, i.e. any los
 \begin{equation}\label{eq:LogReg}
 	\mathscr{L} (\bm{p}^i_{t_j},y_i;\tilde{\beta}) = - y_i \left( [ 1 \,\, ( \bm{p}^i_{t_j})^T] \tilde{\beta}_{j} \right) + \log \left( 1+ \exp\big\{[ 1 \, \,( \bm{p}^i_{t_j})^T ] \tilde{\beta}_{j}\big\} \right) \, .
 \end{equation}
-Here the vector $[1 \,\, ( \bm{p}^i_{t_j})^T]$ denotes the concatenation of the vector $\bm{p}^i_{t_j}$ with the constant $1$ to account for the intercept. %We refer to our developing-events classifier for logistic regression by $\mathscr{P}$ in the following sections.
+Here the vector $[1 \,\, ( \bm{p}^i_{t_j})^T]$ denotes the concatenation of the vector $\bm{p}^i_{t_j}$ with the constant $1$ to account for the intercept. %We refer to our age-varying events classifier for logistic regression by $\mathscr{P}$ in the following sections.
 
 Next we explore a non-Gaussian state space model for partial observations.
 
@@ -448,7 +448,7 @@ The number of events of class A and B, and their positions, are randomly generat
 	 \caption{Differences in class A and class B events.}\label{tab:DiffClassAandB}
 \end{table}
 
-We classify the extracted events from synthetic data using: 1) the developing-events classifier; 2) cascaded state space models; and 3) logistic regression. We use the same feature vector to summarise the extracted events. Figure~\ref{fig:TwoWindows} shows snapshots of the data and the extracted events for two time windows.
+We classify the extracted events from synthetic data using: 1) the age-varying events classifier; 2) cascaded state space models; and 3) logistic regression. We use the same feature vector to summarise the extracted events. Figure~\ref{fig:TwoWindows} shows snapshots of the data and the extracted events for two time windows.
 
 \begin{figure}
 	\centering
@@ -481,22 +481,22 @@ We classify the extracted events from synthetic data using: 1) the developing-ev
 
 We repeat each experiment $5$ times with data streams generated with different seeds. For each experiment we generate a data stream of dimension $3500 \times 250$ of which $80\%$ $(2800 \times 250)$ is used for training and the remaining $20\%$ for testing. For synthetic data classification, we do not use features which were motivated from the real example, i.e. we do not use features 11 and 12 from the list in Section~\ref{sec:Featurelist}, for computational efficiency. In addition, the centroid is not used in any classification task. As class A events can have a maximum age of $30$, we use $4$ event ages for the classification tasks at $t = 8, 16, 24$ and $32$ time units. That is, event features are calculated at these ages. We use a moving window model of dimension $200 \times 250$ which moves by a step of $8 \times 250$.
 
-Figure~\ref{fig:3Classifiers} shows the accuracy of the developing-events classifier, state space model and logistic regression classifier over 5 repetitions.  From Figure~\ref{fig:Facet2} we see that for each repetition either the developing-events classifier or the state space model surpasses the logistic regression classifier. From Figure~\ref{fig:Facet1} we see that the developing-events classifier performs better on average than the other two classifiers for synthetic data. Table~\ref{tab:Results_Synthetic} gives the average test set accuracy results for the 3 classifiers, which confirms these observations. Also we see that all 3 classifiers improve their average accuracy levels with the age of the events.
+Figure~\ref{fig:3Classifiers} shows the accuracy of the age-varying events classifier, state space model and logistic regression classifier over 5 repetitions.  From Figure~\ref{fig:Facet2} we see that for each repetition either the age-varying events classifier or the state space model surpasses the logistic regression classifier. From Figure~\ref{fig:Facet1} we see that the age-varying events classifier performs better on average than the other two classifiers for synthetic data. Table~\ref{tab:Results_Synthetic} gives the average test set accuracy and standard deviation results for the 3 classifiers, which confirms these observations. Also we see that all 3 classifiers improve their average accuracy levels with the age of the events.
 
 \begin{table}[!ht]
   \centering
-  \begin{tabular}{lcccc}
+  \begin{tabular}{lccccccccc}
     \toprule
-    Classifier                   & \multicolumn{4}{c}{Accuracy} \\
-    \cmidrule{2-5}
-                                 & $t_1$ & $t_2$ & $t_3$ & $t_4$ \\
+    Classifier                   & \multicolumn{4}{c}{Accuracy} & & \multicolumn{4}{c}{Standard deviation} \\
+    \cmidrule{2-5} \cmidrule{7-10}
+                                 & $t_1$ & $t_2$ & $t_3$ & $t_4$   & & $t_1$ & $t_2$ & $t_3$ & $t_4$\\
     \midrule
-    Developing-events classifier & 81    & 90    & 93    & 92    \\
-    Cascaded state space models  & 87    & 89    & 89    & 90    \\
-    Logistic regression          & 75    & 78    & 77    & 78    \\
+    Age-varying events classifier & 81    & 90    & 93    & 92  &  & 9  & 8  &  7  & 5 \\
+    Cascaded state space models  & 87    & 89    & 89    & 90   & & 5  & 4  &  5  & 2\\
+    Logistic regression          & 75    & 78    & 77    & 78   & & 12  & 11 & 10 & 9 \\
     \bottomrule
   \end{tabular}
-    \caption{Average test set accuracy $(\%)$ over $5$ repetitions.}\label{tab:Results_Synthetic}
+    \caption{Average test set accuracy and standard deviation $(\%)$ over $5$ repetitions.}\label{tab:Results_Synthetic}
 \end{table}
 % 5 repetitions
 % glm - logistic regression
@@ -516,9 +516,9 @@ The data for the first real application is from a fibre optic cable, and is show
 	\label{fig:Real_World_Data_Stream}
 \end{figure}
 
-Similar to the synthetic data stream, we classify the extracted event features using 3 classifiers. The main difference is that the real data stream has a much smaller number of class A events compared to class B events. Due to this class imbalance, we configure the state space models for real data differently from those used for the synthetic data. First, we use the state space models structure depicted in Figure~\ref{fig:PODLM2} because. Second, as there are only $4$ class A events, there is not enough class A data to update the state space models regularly. Consequently, we use the state space models for training and prediction without the updating step given in equation \eqref{eq:GDLM_3}.
+Similar to the synthetic data stream, we classify the extracted event features using 3 classifiers. The main difference is that the real data stream has a much smaller number of class A events compared to class B events. Due to this class imbalance, we configure the state space models for real data differently from those used for the synthetic data. First, we use the state space models structure depicted in Figure~\ref{fig:PODLM2} because. Second, as there are only $4$ class A events, there is not enough class A data to update the state space models regularly. Consequently, we use the state space models for training and prediction without the updating step given in equation \eqref{eq:DLM_2}.
 
-We use $4$-fold cross validation because there are 4 class A events, with event ages $t = 10, 20, 30$ and $40$, because the maximum event-age is $40$ time units. The developing-events, logistic regression and the state space models classifiers are trained on a data stream comprising 3 training folds, and tested on the remaining fold.
+We use $4$-fold cross validation because there are 4 class A events, with event ages $t = 10, 20, 30$ and $40$, because the maximum event-age is $40$ time units. The age-varying events, logistic regression and the state space models classifiers are trained on a data stream comprising 3 training folds, and tested on the remaining fold.
 
 We report additional accuracy measures that are designed for imbalanced datasets. These metrics are positive predictive value (PPV), negative predictive value (NPV) and area under the receiver operator characteristic curve (AUC). We give the definitions of these metrics below:
 $$
@@ -531,7 +531,7 @@ The number of predicted positives in PPV is the sum of true positives and false 
 
 In contrast, the area under the receiver operator characteristic (ROC) curve is a single measure that captures the effectiveness of a classifier. The ROC curve is a plot of the true positive rate against the false positive rate for different classification thresholds. The area under the curve (AUC) provides a measure of discrimination between positive and negative classes. The AUC can be interpreted as the probability that a positive observation is ranked higher than a negative observation. The AUC does not depend on the classification threshold as it is an aggregate measure. An AUC closer to 1 is reflective of a good model, while a random predictor will give an AUC closer to 0.5.
 
-The graphs in Figures~\ref{fig:RealPPV},~\ref{fig:RealNPV} and~\ref{fig:RealROC} give the PPV, NPV and AUC values of the 3 classifiers grouped by classifier and fold. Table~\ref{tab:AverageAccuracyReal} gives the average PPV, NPV and AUC values over the $4$-folds for the real data stream.
+The graphs in Figures~\ref{fig:RealPPV},~\ref{fig:RealNPV} and~\ref{fig:RealROC} give the PPV, NPV and AUC values of the 3 classifiers grouped by classifier and fold. For PPV and NPV, we use a probability threshold of $0.5$, i.e. if the output probability is greater than 0.5, it is deemed class A, and class B otherwise.  Table~\ref{tab:AverageAccuracyReal} gives the average PPV, NPV and AUC values with their standard deviations over the $4$-folds for the real data stream.
 
 % PPV - dev events 0.964285714	1	1	0.964285714
 % PPV - dma 0.683333333	0.816071429	0.85625	0.6375
@@ -545,7 +545,7 @@ The graphs in Figures~\ref{fig:RealPPV},~\ref{fig:RealNPV} and~\ref{fig:RealROC}
 % AUC - dma 0.874206349	0.985603408	0.902065826	0.943148926
 % AUC - glm 0.873358586	0.819453463	0.816675685	0.843659812
 
-\begin{figure}[!hb]
+\begin{figure}[!h]
 	\centering
 	\subfloat[][]{
 		\includegraphics[width=0.48\textwidth]{./Graphics/Real_World_PPV_1.pdf}
@@ -559,7 +559,7 @@ The graphs in Figures~\ref{fig:RealPPV},~\ref{fig:RealNPV} and~\ref{fig:RealROC}
 	\label{fig:RealPPV}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[!h]
 	\centering
 	\subfloat[][]{
 		\includegraphics[width=0.48\textwidth]{./Graphics/Real_World_NPV_1.pdf}
@@ -573,7 +573,7 @@ The graphs in Figures~\ref{fig:RealPPV},~\ref{fig:RealNPV} and~\ref{fig:RealROC}
 	\label{fig:RealNPV}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[!h]
 	\centering
 	\subfloat[][]{
 		\includegraphics[width=0.48\textwidth]{./Graphics/Real_World_ROC_1.pdf}
@@ -587,29 +587,32 @@ The graphs in Figures~\ref{fig:RealPPV},~\ref{fig:RealNPV} and~\ref{fig:RealROC}
 	\label{fig:RealROC}
 \end{figure}
 
-\begin{table}
+ 
+\begin{table}[!h]
 	\centering
-	\begin{tabular}{llrrrr}
+	\begin{tabular}{llccccccccc}
 		\toprule
-		Accuracy Measure & Classifier                   & At $t_1$ & At $t_2$ & At $t_3$ & At $t_4$ \\
+		Accuracy Measure & Classifier  & \multicolumn{4}{c}{Mean} & & \multicolumn{4}{c}{Standard deviation}   \\
+		\cmidrule{3-6} \cmidrule{8-11}
+		& & $t_1$ &  $t_2$ &  $t_3$ &  $t_4$   & &   $t_1$ &  $t_2$ &  $t_3$ &  $t_4$ \\
 		\midrule
-		PPV              & Developing-events classifier & 95       & 95       & 100      & 95       \\
-		                 & Cascaded state space models  & 74       & 69       & 68       & 68       \\
-		                 & Logistic regression          & 91       & 75       & 75       & 70       \\
+		PPV              & Age-varying events classifier & 95    & 95   & 100  & 95   & & 8 & 8 & 0 & 8    \\
+		                 & Cascaded state space models  & 74     & 69   & 68   & 68   & & 18 & 15 & 12& 23   \\
+		                 & Logistic regression          & 91     & 75   & 75   & 70   & & 16 & 31 & 31 & 34     \\
 		\hline
-		NPV              & Developing-events classifier & 91       & 92       & 93       & 92       \\
-		                 & Cascaded state space models  & 98       & 100      & 99       & 100      \\
-		                 & Logistic regression          & 95       & 95       & 95       & 92       \\
+		NPV              & Age-varying events classifier & 91    & 92   & 93   & 92    & & 6 & 3 & 4 & 5   \\
+		                 & Cascaded state space models  & 98     & 100  & 99   & 100   & & 2 & 0 & 1 & 0   \\
+		                 & Logistic regression          & 95     & 95   & 95   & 92    & & 1 & 1 & 3 & 5 \\   \\
 		\hline
-		AUC              & Developing-events classifier & 93       & 94       & 96       & 94       \\
-		                 & Cascaded state space models  & 94       & 97       & 94       & 97       \\
-		                 & Logistic regression          & 93       & 85       & 85       & 81       \\
+		AUC              & Age-varying events classifier & 93    & 94   & 96   & 94   & & 5 & 5 & 2 & 5    \\
+		                 & Cascaded state space models  & 94     & 97   & 94   & 97   & & 7 & 0 & 5& 1    \\
+		                 & Logistic regression          & 93     & 85   & 85   & 81   & & 7 & 15 & 15 & 14     \\
 		\bottomrule
 	\end{tabular}
-	 \caption{Average PPV, NPV and AUC $(\%)$ over $4$ folds.}\label{tab:AverageAccuracyReal}
+	 \caption{Mean and standard deviation of PPV, NPV and AUC $(\%)$ over $4$ folds.}\label{tab:AverageAccuracyReal}
 \end{table}
 
-From Table~\ref{tab:AverageAccuracyReal}, we see that the developing-events classifier has the highest average PPV and the cascaded state space models have the highest average NPV for all event ages. In terms of AUC both the developing-events classifier and the state space models out perform the logistic regression classifier.
+From Table~\ref{tab:AverageAccuracyReal}, we see that the age-varying events classifier has the highest average PPV and the cascaded state space models have the highest average NPV for all event ages. Of the two classifiers, state space models are more conservative in predicting class A events compared with the age-varying events classifier. That is, if the state space models predict an event as belonging to class A, it is more likely that the actual event is of class A compared with the age-varying classifier. This is supported by the high mean NPV values and the associated low standard deviations of the state space models. On the other hand, the age-varying events classifier is much more likely to catch all class A events compared with the state space models as seen by the higher PPV values. Whether it is better to be conservative and miss some class A events while being very accurate in terms of the predicted class A events, or to identify all class A events while giving some false positives, depends on the application. Often the cost of  false positives and false negatives are not the same; for example consider a medical test for cancer. Thus, we see that our proposed two models have different strengths. In addition, both these models outperform the logistic regression classifier as seen by the AUC values.  
 
 \newpage
 \subsection{Nitrogen dioxide monitoring}
@@ -716,7 +719,7 @@ This paper has proposed a framework for event extraction and event classificatio
 
 In addition, we have propose a simple algorithm for event extraction, which can be used on two or three dimensional data streams. The applicability of our event extraction algorithm has been demonstrated using the $\text{NO}_2$ data from NASA's NEO website.
 
-Future directions for this research include extending the developing-events classifier to have automatically updating coefficients, and including a variety of event extraction processes.
+Future directions for this research include extending the age-varying events classifier to have automatically updating coefficients, and including a variety of event extraction processes.
 
 % =======================================================================
 \section*{Acknowledgements}
