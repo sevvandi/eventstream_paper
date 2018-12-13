@@ -142,14 +142,14 @@ Figure~\ref{fig:Real_World_Data} gives the heatmap of a dataset produced from a 
 \begin{figure}
 %	\centering
 	\subfloat[][]{
-		\includegraphics[scale=0.9]{./Graphics/Real_World.pdf} 
+		\includegraphics[scale=0.9]{./Graphics/Real_World.pdf}
 		\label{fig:Real_1}
 	}
 	\subfloat[][]{
-		\includegraphics[scale=0.8]{./Graphics/Two_Event_Features.pdf} 
+		\includegraphics[scale=0.8]{./Graphics/Two_Event_Features.pdf}
 		\label{fig:Real_Feat_1} % width=0.48\textwidth, height=0.2\textheight  width=0.48\linewidth
 	}
-	
+
 	\caption{Figure~\ref{fig:Real_1} shows data from a fibre optic cable. We extract events  from this window and compute event features. We consider two events belonging to two different classes and an event feature that changes with event-age.  Figure~\ref{fig:Real_Feat_1} shows this event feature, which is the slope of a line fitted to the event signal values, and how it changes with event-age.}
 	\label{fig:Real_World_Data}
 \end{figure}
@@ -212,8 +212,8 @@ Figure~\ref{fig:blobs_A_B} shows a  synthetic dataset generated from the package
 
 \subsection{Features}\label{sec:Featurelist}
 
-As we work with a data stream, we use a moving window model in our experiments. We extract events from data in the current window and compute features for these events. The feature set comprises some basic features such as length and width of each event, and some other features that compute the intensity of each event relative to the background. The  ``Relative to the background'' features are equivalent to a family of signal to noise ratio features and are motivated from the fibre optic application (see Figure~\ref{fig:1}).   
-	 
+As we work with a data stream, we use a moving window model in our experiments. We extract events from data in the current window and compute features for these events. The feature set comprises some basic features such as length and width of each event, and some other features that compute the intensity of each event relative to the background. The  ``Relative to the background'' features are equivalent to a family of signal to noise ratio features and are motivated from the fibre optic application (see Figure~\ref{fig:1}).
+
 To compute the SNR family of features  we use smoothing splines and thus they are only computed for two-dimensional data streams due to ease of computation.  Using a small portion from the beginning of each window, which correspond to the recent past, we compute the mean, median, IQR and standard deviation for each location. Using these values at each location, we compute four smoothing splines. The objective is to have the background mean, median, IQR and standard deviation pixel value for each location. The median and IQR splines from a small window in Figure~\ref{fig:Im_Splines} are shown in Figures~\ref{fig:Spline_Median} and~\ref{fig:Spline_IQR}. %This enables the computation of event strength or intensity relative to the background.
 
 \begin{figure}[!hb]
@@ -276,9 +276,9 @@ Standard classifiers have been widely popular in diverse fields of study and pra
 
 Now, consider the case when a new observation is not made available at once but gradually, where we get partial information about the new observation and the amount of partial information increases with time. This is the case for events described in Section~\ref{sec:EventExtract}. Let $\bm{x}_j$ be a new observation which becomes available partially via the following finite sequence of partial observations $\{\bm{p}^j_{t_1},\bm{p}^j_{t_2}, \bm{p}^j_{t_3}, \dots, \bm{p}^j_{t_n}\}$. Here the partial observation of $\bm{x}_j$ at age $t_k$ is denoted by $\bm{p}^j_{t_k}$ and $\bm{p}^j_{t_n} = \bm{x}_j$ with $t_1 < t_2 < \dots < t_n$. We differentiate between the time and the age of a partial observation. A partial observation that begins at time $t =t_1$ has age $0$ at time $t_1$, and at time $t = t_2$ it has age $t_2 - t_1$.
 
-We consider the question ``how can we classify partial observations?'' If one trains a single standard classifier on all partial observations, it may be optimal for a certain set of partial observations $p_{t_k}$ at a given age $t_k$, but not all partial observations, because partial observations change with time. If one waits until the partial observation has formed into a full observation $\bm{x}_j$, then a standard classifier can be used. However, for some applications such as intrusion detection it might be too late to wait until the full observation has formed. One option is to have a series of standard classifiers $\{C_{t_i}\}_{i=1}^n$ each trained on partial observations $p_{t_i}$. When a new observation gradually arrives in the form of a sequence of partial observations $\{\bm{p}^k_{t_1},\bm{p}^k_{t_2}, \bm{p}^k_{t_3}, \dots, \bm{p}^k_{t_n}\}$, the classifier $C_{t_i}$ can be used on $\bm{p}^k_{t_i}$. Thus, as the partial observation grows, we have a growing prediction $\{y_{t_1}, y_{t_2}, \dots, y_{t_n}\}$ of the class label. More importantly, we do not need to wait until the partial observation matures to a full observation before making a prediction. 
+We consider the question ``how can we classify partial observations?'' If one trains a single standard classifier on all partial observations, it may be optimal for a certain set of partial observations $p_{t_k}$ at a given age $t_k$, but not all partial observations, because partial observations change with time. If one waits until the partial observation has formed into a full observation $\bm{x}_j$, then a standard classifier can be used. However, for some applications such as intrusion detection it might be too late to wait until the full observation has formed. One option is to have a series of standard classifiers $\{C_{t_i}\}_{i=1}^n$ each trained on partial observations $p_{t_i}$. When a new observation gradually arrives in the form of a sequence of partial observations $\{\bm{p}^k_{t_1},\bm{p}^k_{t_2}, \bm{p}^k_{t_3}, \dots, \bm{p}^k_{t_n}\}$, the classifier $C_{t_i}$ can be used on $\bm{p}^k_{t_i}$. Thus, as the partial observation grows, we have a growing prediction $\{y_{t_1}, y_{t_2}, \dots, y_{t_n}\}$ of the class label. More importantly, we do not need to wait until the partial observation matures to a full observation before making a prediction.
 
-However, having a series of classifiers independent of each other is sub-optimal because each classifier is only trained on a portion of the data, i.e. it is trained on  individual snapshots of events at different ages. By linking event snapshots of different event-ages in an appropriate way,  better predictions can be achieved.  The age-varying events classifier described in the next section addresses this limitation, while giving a growing prediction. 
+However, having a series of classifiers independent of each other is sub-optimal because each classifier is only trained on a portion of the data, i.e. it is trained on  individual snapshots of events at different ages. By linking event snapshots of different event-ages in an appropriate way,  better predictions can be achieved.  The age-varying events classifier described in the next section addresses this limitation, while giving a growing prediction.
 
 %Here we note that one does not need to have $t_n$ number of classifiers, but can do with a fewer number of classifiers such that for partial observations with age $t_1 \leq t \leq t_i$ classifier $C_1$ is used, and for partial observations with age $t_i \leq t \leq t_j$ classifier $C_2$ is used and so on. Here $t_1 < t_i < t_j $.
 
@@ -344,7 +344,7 @@ We use non-Gaussian state space models as described in \cite{durbin1998time} and
 	y_t          & = Z_t \alpha_t + \varepsilon_t \, , \label{eq:DLM_1} \\
 	\alpha_{t+1} & = T_t \alpha_t + R_t \eta_t \, , \label{eq:DLM_2}
 \end{align}
-where $\varepsilon_t \in \mathcal{N} \left(0, H_t\right)$ and $\eta_t \in \mathcal{N} \left(0, Q_t\right)$. %and $\alpha_1 \in \left(0, Q_t\right)$. 
+where $\varepsilon_t \in \mathcal{N} \left(0, H_t\right)$ and $\eta_t \in \mathcal{N} \left(0, Q_t\right)$. %and $\alpha_1 \in \left(0, Q_t\right)$.
 Here $y_t$ is an $N$-dimensional vector of observations and $\alpha_t$ is a $(l+1)$-dimensional state vector. The matrices $Z_t$, $T_t$, $R_t$, $H_t$ and $Q_t$ are known at the beginning.  Equation \eqref{eq:DLM_1} is called the ``observation equation'' and equation \eqref{eq:DLM_2}  the ``state equation''. When using state space models for dynamic regression, $\alpha_t$ denotes the coefficients which update dynamically.
 
 %If the observations $y_t$ come from an exponential family distribution, the equations change as follows:
@@ -354,14 +354,14 @@ Here $y_t$ is an $N$-dimensional vector of observations and $\alpha_t$ is a $(l+
 %\end{align}
 %with $\E(y_t) = \mu_t$ and $f(\mu_t) = \theta_t$ where $f$ is an appropriate link function. For a binomial distribution, the logit function $f(t)=\log(t/(1-t))$ is used as the link.
 
-If $y_t$ is a binary response such that 
+If $y_t$ is a binary response such that
 $$ y_t \sim \text{Bernoulli}(p_t) \, , $$
-equation \eqref{eq:DLM_1} changes as 
+equation \eqref{eq:DLM_1} changes as
 
-\begin{equation}\label{eq:GDLM_2} 
+\begin{equation}\label{eq:GDLM_2}
 	\text{logit}(p_t) =   Z_t \alpha_t \, ,              \\
 \end{equation}
-with logit function $f(t)=\log(t/(1-t))$, while keeping equation \eqref{eq:DLM_2} unchanged. 
+with logit function $f(t)=\log(t/(1-t))$, while keeping equation \eqref{eq:DLM_2} unchanged.
 
 \subsection{Modelling partial observations}
 
@@ -371,7 +371,7 @@ We are interested in a growing prediction $\{\theta^j_{t_1}, \theta^j_{t_2}, \do
 % $\left\{ y^j_{t_1}, y^j_{t_2}, \dots, y^j_{t_n} \right\}$
 As state space models generally deal with time, for each age $t_k$ we use a separate state space model. However, for some cases it may benefit if there is communication between the models regarding the same observation. To add communication between the models, we bundle the partial observation $\bm{p}^j_{t_k}$ with the prediction output $\theta^j_{t_{k-1}}$ of the lower age model and use it as input for the age $t_k$ model. % For example the prediction of partial observation $\bm{p}^j_{t_1}$ is given by one state space model and the prediction of $\bm{p}^j_{t_2}$ is given by another model without any link between the two.
 
-To explain this further, let us define $\bm{P}_{t_k} = \left[ \bm{p}^1_{t_k}\, \bm{p}^2_{t_k}\, \cdots \, \bm{p}^N_{t_k} \right]^T$ - an $l \times N$ matrix containing all partial observations of age $t_k$, $\bm{1} = \left[ 1, 1, \dots, 1\right]^T$ and $\theta_{t_k} = \left[\theta^1_{t_k}, \theta^2_{t_k}, \dots, \theta^N_{t_k} \right]^T$ - the logit predictions of the partial observations in $\bm{P}_{t_k}$, where $\bm{p}^j_{t_k}$ is an $l$-vector and $N$ denotes the number of complete observations. %Here $\bm{P}_{t_k}$ is an $l \times N$ matrix containing all partial observations of age $t_k$. 
+To explain this further, let us define $\bm{P}_{t_k} = \left[ \bm{p}^1_{t_k}\, \bm{p}^2_{t_k}\, \cdots \, \bm{p}^N_{t_k} \right]^T$ - an $l \times N$ matrix containing all partial observations of age $t_k$, $\bm{1} = \left[ 1, 1, \dots, 1\right]^T$ and $\theta_{t_k} = \left[\theta^1_{t_k}, \theta^2_{t_k}, \dots, \theta^N_{t_k} \right]^T$ - the logit predictions of the partial observations in $\bm{P}_{t_k}$, where $\bm{p}^j_{t_k}$ is an $l$-vector and $N$ denotes the number of complete observations. %Here $\bm{P}_{t_k}$ is an $l \times N$ matrix containing all partial observations of age $t_k$.
 Then the equation corresponding to equation \eqref{eq:GDLM_2} for the initial model for age $t_1$ can be written as
 % and $\bm{y}_{t_k} = \left\{ y^1_{t_k}, y^2_{t_k}, \dots, y^N_{t_k} \right\}$ and $\bm{y}_{t_k}$ an $N \times 1$ vector containing all class labels.
 \begin{align}
@@ -597,7 +597,7 @@ The graphs in Figures~\ref{fig:RealPPV},~\ref{fig:RealNPV} and~\ref{fig:RealROC}
 	\label{fig:RealROC}
 \end{figure}
 
- 
+
 \begin{table}[!h]
 	\centering
 	\begin{tabular}{llccccccccc}
@@ -622,14 +622,13 @@ The graphs in Figures~\ref{fig:RealPPV},~\ref{fig:RealNPV} and~\ref{fig:RealROC}
 	 \caption{Mean and standard deviation of PPV, NPV and AUC $(\%)$ over $4$ folds.}\label{tab:AverageAccuracyReal}
 \end{table}
 
-From Table~\ref{tab:AverageAccuracyReal}, we see that the age-varying events classifier has the highest average PPV and the cascaded state space models have the highest average NPV for all event ages. Of the two classifiers, state space models are more conservative in predicting class A events compared with the age-varying events classifier. That is, if the state space models predict an event as belonging to class A, it is more likely that the actual event is of class A compared with the age-varying classifier. This is supported by the high mean NPV values and the associated low standard deviations of the state space models. On the other hand, the age-varying events classifier is much more likely to catch all class A events compared with the state space models as seen by the higher PPV values. Whether it is better to be conservative and miss some class A events while being very accurate in terms of the predicted class A events, or to identify all class A events while giving some false positives, depends on the application. Often the cost of  false positives and false negatives are not the same; for example consider a medical test for cancer. Thus, we see that our proposed two models have different strengths. In addition, both these models outperform the logistic regression classifier as seen by the AUC values.  
+From Table~\ref{tab:AverageAccuracyReal}, we see that the age-varying events classifier has the highest average PPV and the cascaded state space models have the highest average NPV for all event ages. Of the two classifiers, state space models are more conservative in predicting class A events compared with the age-varying events classifier. That is, if the state space models predict an event as belonging to class A, it is more likely that the actual event is of class A compared with the age-varying classifier. This is supported by the high mean NPV values and the associated low standard deviations of the state space models. On the other hand, the age-varying events classifier is much more likely to catch all class A events compared with the state space models as seen by the higher PPV values. Whether it is better to be conservative and miss some class A events while being very accurate in terms of the predicted class A events, or to identify all class A events while giving some false positives, depends on the application. Often the cost of  false positives and false negatives are not the same; for example consider a medical test for cancer. Thus, we see that our proposed two models have different strengths. In addition, both these models outperform the logistic regression classifier as seen by the AUC values.
 
-\newpage
 \subsection{Nitrogen dioxide monitoring}\label{sec:NO2Exp}
 
 The second application focuses on event extraction from Nitrogen Dioxide $(\text{NO}_2)$ data from NASA's NEO website \cite{OMINO2}. The Ozone Monitoring Instrument (OMI) \cite{levelt2006ozone} aboard the Aura satellite records a variety of air quality measures including $\text{NO}_2$ concentrations around the world. We use some of this data to demonstrate the event extraction and feature computation process for a 3-dimensional data stream.
 
-We use OMI $\text{NO}_2$ monthly data from March to June in the years 2008 and 2018 for a comparison study. For each month the data comes in a matrix of $1799 \times 3600$ dimensions. For ease of calculation we reduce the dimension of this matrix to $180 \times 360 $, by computing the average of each $10 \times 10$ block of data in the original matrix. The OMI $\text{NO}_2$ data for two months (March 2008 and 2018) are shown in Figure~\ref{fig:NO2March2008}.
+We use OMI $\text{NO}_2$ monthly data from March to June in the years 2008 and 2018 for a comparison study. For each month the data comes in a matrix of $1799 \times 3600$ dimensions. For ease of calculation we reduce the dimension of this matrix to $180 \times 360 $, by computing the average of each $10 \times 10$ block of data in the original matrix. The OMI $\text{NO}_2$ data for two months (March 2008 and March 2018) are shown in Figure~\ref{fig:NO2March2008}.
 
 \begin{figure}[!htb]
 	\centering
@@ -645,7 +644,7 @@ We use OMI $\text{NO}_2$ monthly data from March to June in the years 2008 and 2
 	\label{fig:NO2March2008}
 \end{figure}
 
-Using Algorithm~\ref{algo:events_extraction}, we extract events from this data set, which are clusters of high $\text{NO}_2$ levels spanning space and time. Events are extracted from a 3-dimensional data stream of $4 \times 180 \times 360$ array, where each $180 \times 360$ matrix corresponds to the $\text{NO}_2$ levels of a given month. The parameters used in Algorithm~\ref{algo:events_extraction} are $\alpha = 0.97$, $\epsilon=2$ and $\text{minPts} = 20$. There are 23 events/clusters in the 2008 data and 13 events/clusters in 2018 data. Figure~\ref{fig:ClustersNO2March2008} shows these clusters for March 2008 and 2018 (corresponding to the data in Figure~\ref{fig:NO2March2008}) with each cluster/event depicted by a single colour. \todo{What do the colors represent?}
+Using Algorithm~\ref{algo:events_extraction}, we extract events from this data set, which are clusters of high $\text{NO}_2$ levels spanning space and time. Events are extracted from a 3-dimensional data stream of $4 \times 180 \times 360$ array, where each $180 \times 360$ matrix corresponds to the $\text{NO}_2$ levels of a given month. The parameters used in Algorithm~\ref{algo:events_extraction} are $\alpha = 0.97$, $\epsilon=2$ and $\text{minPts} = 20$. There are 23 events/clusters in the 2008 data and 13 events/clusters in 2018 data. Figure~\ref{fig:ClustersNO2March2008} shows these clusters for March 2008 and March 2018 (corresponding to the data in Figure~\ref{fig:NO2March2008}) with each cluster/event depicted by a single colour.
 
 \begin{figure}[!hb]
 	\centering
@@ -691,7 +690,7 @@ Using Algorithm~\ref{algo:events_extraction}, we extract events from this data s
 
 \begin{figure}[!htb]
     \centering
-    \includegraphics[width=0.48\textwidth]{./Graphics/Highest_Event_NO2_2008_2018.pdf} 
+    \includegraphics[width=0.48\textwidth]{./Graphics/Highest_Event_NO2_2008_2018.pdf}
      \caption{The average $\text{NO}_2$ levels for the two events in Figure~\ref{fig:HighestEventNO220082018}.}
     \label{fig:HighestEventNO2200820183}
 \end{figure}
@@ -710,11 +709,11 @@ Using Algorithm~\ref{algo:events_extraction}, we extract events from this data s
   \label{fig:DifferenceInNO2Levels}
 \end{figure}
 
-For each event we compute features 1--8 and 14 from the list of features in Section~\ref{sec:Featurelist}. These features are chosen for ease of computation. Specially as we are not focusing on event classification in this application, we do not compute the other features which involve fitting splines for 3-dimensional data.  
+For each event we compute features 1--8 and 14 from the list of features in Section~\ref{sec:Featurelist}. These features are chosen for ease of computation. Specially as we are not focusing on event classification in this application, we do not compute the other features which involve fitting splines for 3-dimensional data.
 
-We analyse the two events which have the highest average $\text{NO}_2$ levels for 2008 and 2018. The maps in Figure~\ref{fig:HighestEventNO220082018} show the spatial locations and the $\text{NO}_2$ levels of these two events for March 2008 and 2018. As these two events are geographically at the same location, we compare the average  $\text{NO}_2$ levels for these two events for the months from March to June in 2008 with those of 2018. The graph in Figure~\ref{fig:HighestEventNO2200820183} shows that the average $\text{NO}_2$ levels have decreased in 2018 compared to 2008 for this geographical location.  \todo{How can it be the same event 10 years apart?}
+We analyse the two events that had the highest average $\text{NO}_2$ levels for each of 2008 and 2018. The maps in Figure~\ref{fig:HighestEventNO220082018} show the spatial locations and the $\text{NO}_2$ levels of these two events for 2008 and 2018. As these two events are geographically at the same location, we compare the average  $\text{NO}_2$ levels for these two events for the months from March to June in 2008 with those of 2018. The graph in Figure~\ref{fig:HighestEventNO2200820183} shows that the average $\text{NO}_2$ levels have decreased in 2018 compared to 2008 for this geographical location.
 
-Next we match the events in 2008 and 2018 by their spatial location. We do a simple analysis of these $\text{NO}_2$ events. We want to know if these $\text{NO}_2$ events have increased or decreased in severity during this 10 year time gap. For each of these matched events we find the average $\text{NO}_2$ level difference between 2018 and 2008. Figure~\ref{fig:DifferenceInNO2Levels} shows the graph of these differences. We see that 4 events have positive $\text{NO}_2$ differences for each month, i.e., the average $\text{NO}_2$ levels have increased from 2008 to 2018 for these 4 events. In addition event 15 is different from other events. Figure~\ref{fig:PositiveDifferentEventsNO220082018} shows the locations of the increased $\text{NO}_2$ events in March 2018 along with the location of the outlying event 15.
+Next we match the events in 2008 and 2018 by their spatial location. We do a simple analysis of these $\text{NO}_2$ events. We want to know if these $\text{NO}_2$ events have increased or decreased in severity during this 10 year time gap. For each of these matched events we find the average $\text{NO}_2$ level difference between 2018 and 2008. Figure~\ref{fig:DifferenceInNO2Levels} shows the graph of these differences. We see that 4 events have positive $\text{NO}_2$ differences for each month, i.e., the average $\text{NO}_2$ levels have increased from 2008 to 2018 for these 4 events. In addition, event 15 is different from other events. Figure~\ref{fig:PositiveDifferentEventsNO220082018} shows the locations of the increased $\text{NO}_2$ events in March 2018 along with the location of the outlying event 15.
 
 \begin{figure}
 	\centering
@@ -747,7 +746,7 @@ Future directions for this research include extending the age-varying events cla
 % =======================================================================
 {\bf R-package eventstream:} This package contains Algorithm~\ref{algo:events_extraction} for event extraction, the age-varying event classifier for early event classification, functions for synthetic data generation, the fibre-optic data stream and $\text{NO}_2$ data for 2008 and 2018. It is available from Github at \url{https://github.com/sevvandi/eventstream}. \\
 {\bf Scripts:} There are three files containing the R code used in Section~\ref{sec:Experiments}.  The file \url{Supp_Mat_1.R}, \url{Supp_Mat_2.R} and \url{Supp_Mat_3.R} contain the code applicable for synthetic data in Section~\ref{subsec:Synthetic}, fibre optic data in Section~\ref{sec:FibreOpticExperiment} and $\text{NO}_2$ data in Section~\ref{sec:NO2Exp} respectively. The file \url{Supp_Mat_4.R} contains the code used to produce some other graphs and images in the paper. \\
-{\bf Other R-packages:} We have used the following R-packages either in this paper or within the package \textit{eventstream} : \textit{dma} \cite{dma}, \, \textit{abind} \cite{abind}, \, \textit{AtmRay} \cite{atmray}, \, \textit{pROC} \cite{proc}, \,  \textit{reshape2} \cite{reshape2}, \,  \textit{ggplot2} \cite{ggplot2}, \, \textit{raster} \cite{raster},  \,  \textit{maps} \cite{maps}, \,  \textit{tensorA} \cite{tensorA}, \,  \textit{glmnet} \cite{glmnet}, \,  \textit{dbscan} \cite{dbscan} and \textit{MASS} \cite{MASS}.   
+{\bf Other R-packages:} We have used the following R-packages either in this paper or within the package \textit{eventstream} : \textit{dma} \cite{dma}, \, \textit{abind} \cite{abind}, \, \textit{AtmRay} \cite{atmray}, \, \textit{pROC} \cite{proc}, \,  \textit{reshape2} \cite{reshape2}, \,  \textit{ggplot2} \cite{ggplot2}, \, \textit{raster} \cite{raster},  \,  \textit{maps} \cite{maps}, \,  \textit{tensorA} \cite{tensorA}, \,  \textit{glmnet} \cite{glmnet}, \,  \textit{dbscan} \cite{dbscan} and \textit{MASS} \cite{MASS}.
 
 % =======================================================================
 \section*{Acknowledgements}
