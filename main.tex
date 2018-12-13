@@ -57,7 +57,7 @@
 \maketitle
 
 \begin{abstract}
-This paper investigates early event classification in spatio-temporal data streams. We propose a framework for early classification that considers the relationship between the features of an event and their age. The framework incorporates an event extraction algorithm as well as two early event classification algorithms, which use a series of logistic regression classifiers with penalty terms and state space models. We use this framework on synthetic and real applications and demonstrate its reliability and broad applicability. The algorithms are available in the R package \textit{eventstream}, and other code in the supplementary material.
+This paper investigates early event classification in spatio-temporal data streams. We propose a framework for early classification that considers the relationship between the features of an event and its age. The framework incorporates an event extraction algorithm as well as two early event classification algorithms, which use a series of logistic regression classifiers with penalty terms and state space models. We use this framework on synthetic and real applications and demonstrate its reliability and broad applicability. The algorithms are available in the R package \textit{eventstream}, and other code in the supplementary material.
 \end{abstract}
 
 %% Outline of paper
@@ -118,7 +118,7 @@ At this point, we note that concept drift \cite{widmer1996learning, tsymbal2004p
 
 We explore early event classification using two approaches that are based on different principles: 1) logistic regression; and 2) state-space models. These two approaches complement each other as logistic regression by itself is a static model more suited for stationary distributions, and a state space model coupled with a Kalman filter can update easily, which is advantageous for non-stationary data distributions. On the other hand, logistic regression may give better results than state space models for a stable data distribution.
 
-Our proposed framework, depicted in Figure~\ref{fig:1} can be used in applications that give rise to spatio-temporal events with contiguous spatial dimensions. Typically, pre-processing is also a common step done before event extraction. However we do not focus on pre-processing data as techniques differ depending on the application. As event extraction is needed before classification, we also propose a simple method for event extraction. We make this work available in the R package \textit{eventstream} \cite{Ref??}.
+Our proposed framework, depicted in Figure~\ref{fig:1} can be used in applications that give rise to spatio-temporal events with contiguous spatial dimensions. Typically, pre-processing is also a common step done before event extraction. However we do not focus on pre-processing data as techniques differ depending on the application. As event extraction is needed before classification, we also propose a simple method for event extraction. We make this work available in the R package \textit{eventstream} \cite{eventstream}.
 
 \begin{figure}[!hb]
 	\begin{tikzpicture}[node distance=2cm]
@@ -140,11 +140,21 @@ Our proposed framework, depicted in Figure~\ref{fig:1} can be used in applicatio
 Figure~\ref{fig:Real_World_Data} gives the heatmap of a dataset produced from a fibre optic cable. A pulse is periodically sent through the cable and this results in a data matrix where each horizontal row gives the strength of the signal at a fixed location $x_0$, and each vertical column gives the strength of the signal along the cable at a fixed time $t_0$. In this dataset the yellow parts represent high intensity values and the blue parts represent low intensity values.
 
 \begin{figure}
-	\centering
-	\includegraphics[width=0.9\textwidth]{./Graphics/Real_World.pdf} % Real_World_Ex2.pdf
-	\caption{Data from a fibre optic cable.}
+%	\centering
+	\subfloat[][]{
+		\includegraphics[scale=0.9]{./Graphics/Real_World.pdf} 
+		\label{fig:Real_1}
+	}
+	\subfloat[][]{
+		\includegraphics[scale=0.8]{./Graphics/Two_Event_Features.pdf} 
+		\label{fig:Real_Feat_1} % width=0.48\textwidth, height=0.2\textheight  width=0.48\linewidth
+	}
+	
+	\caption{Figure~\ref{fig:Real_1} shows data from a fibre optic cable. We extract events  from this window and compute event features. We consider two events belonging to two different classes and an event feature that changes with event-age.  Figure~\ref{fig:Real_Feat_1} shows this event feature, which is the slope of a line fitted to the event signal values, and how it changes with event-age.}
 	\label{fig:Real_World_Data}
 \end{figure}
+
+
 
 Fibre optic sensor cables are used in many applications including optical communications, detecting undersea cable faults \cite{jiang2009technological}, detecting oil leakages \cite{nikles2004leakage}, detecting intruders on secured premises \cite{griffiths1995developments}, monitoring health of infra-structure such as bridges and pipe-lines \cite{li2004recent}, to name a few. Events in these applications can often be grouped into two classes. For example, a cable lying on the sea bed can produce spatio-temporal events that are either cable faults (A), or non-fault events due to the activity in the ocean (B). Due to its sensitivity, fibre optic cables are also prone to noise. In a setting where early classification is important, we need to classify these events quickly, preferably while they are still ongoing.
 
@@ -202,7 +212,7 @@ Figure~\ref{fig:blobs_A_B} shows a  synthetic dataset generated from the package
 
 \subsection{Features}\label{sec:Featurelist}
 
-As we work with a data stream, we use a moving window model in our experiments. We extract events from data in the current window and compute features for these events. The feature set comprises some basic features such as length and width of each event, and some other features that compute the intensity of each event relative to the background. The  ``Relative to the background'' features are equivalent to a family of signal to noise ratio features and are motivated from the real world application (see Figure \ref{fig:1}).   
+As we work with a data stream, we use a moving window model in our experiments. We extract events from data in the current window and compute features for these events. The feature set comprises some basic features such as length and width of each event, and some other features that compute the intensity of each event relative to the background. The  ``Relative to the background'' features are equivalent to a family of signal to noise ratio features and are motivated from the real world application (see Figure~\ref{fig:1}).   
 	 
 To compute the SNR family of features  we use smoothing splines and thus they are only computed for two-dimensional data streams due to ease of computation.  Using a small portion from the beginning of each window, which correspond to the recent past, we compute the mean, median, IQR and standard deviation for each location. Using these values at each location, we compute four smoothing splines. The objective is to have the background mean, median, IQR and standard deviation pixel value for each location. The median and IQR splines from a small window in Figure~\ref{fig:Im_Splines} are shown in Figures~\ref{fig:Spline_Median} and~\ref{fig:Spline_IQR}. %This enables the computation of event strength or intensity relative to the background.
 
@@ -505,7 +515,7 @@ Figure~\ref{fig:3Classifiers} shows the accuracy of the age-varying events class
 % for all training 8 x 350 blocks
 % testing 2 x 350 blocks
 
-\subsection{Fibre optic cable data}
+\subsection{Fibre optic cable data}\label{sec:FibreOpticExperiment}
 
 The data for the first real application is from a fibre optic cable, and is shown in Figure~\ref{fig:Real_World_Data_Stream}.  The data set is available in the R package \textit{eventstream}. Again, for commercially sensitive reasons, we cannot provide more information about the application. The data set has dimensions $379 \times 587$, with class A events labelled with letter \textbf{A}. The extracted events have a maximum age of 40 time units, so we use a window model with a window size $40 \times 587$ and a step size $10 \times 587$ to extract events and compute features.
 
@@ -615,68 +625,77 @@ The graphs in Figures~\ref{fig:RealPPV},~\ref{fig:RealNPV} and~\ref{fig:RealROC}
 From Table~\ref{tab:AverageAccuracyReal}, we see that the age-varying events classifier has the highest average PPV and the cascaded state space models have the highest average NPV for all event ages. Of the two classifiers, state space models are more conservative in predicting class A events compared with the age-varying events classifier. That is, if the state space models predict an event as belonging to class A, it is more likely that the actual event is of class A compared with the age-varying classifier. This is supported by the high mean NPV values and the associated low standard deviations of the state space models. On the other hand, the age-varying events classifier is much more likely to catch all class A events compared with the state space models as seen by the higher PPV values. Whether it is better to be conservative and miss some class A events while being very accurate in terms of the predicted class A events, or to identify all class A events while giving some false positives, depends on the application. Often the cost of  false positives and false negatives are not the same; for example consider a medical test for cancer. Thus, we see that our proposed two models have different strengths. In addition, both these models outperform the logistic regression classifier as seen by the AUC values.  
 
 \newpage
-\subsection{Nitrogen dioxide monitoring}
+\subsection{Nitrogen dioxide monitoring}\label{sec:NO2Exp}
 
 The second application focusses on event extraction from Nitrogen Dioxide $(\text{NO}_2)$ data from NASA's NEO website \cite{OMINO2}. The Ozone Monitoring Instrument (OMI) \cite{levelt2006ozone} aboard the Aura satellite records a variety of air quality measures including $\text{NO}_2$ concentrations around the world. We use some of this data to demonstrate the event extraction and feature computation process for a 3-dimensional data stream.
 
-We use OMI $\text{NO}_2$ monthly data from March to June in the years 2008 and 2018 for a comparison study. For each month the data comes in a matrix of $1799 \times 3600$ dimensions. For ease of calculation we reduce the dimension of this matrix to $180 \times 360 $, by computing the average of each $10 \times 10$ block of data in the original matrix. The OMI $\text{NO}_2$ data for one month (March 2008) are shown in Figure~\ref{fig:NO2March2008}.
+We use OMI $\text{NO}_2$ monthly data from March to June in the years 2008 and 2018 for a comparison study. For each month the data comes in a matrix of $1799 \times 3600$ dimensions. For ease of calculation we reduce the dimension of this matrix to $180 \times 360 $, by computing the average of each $10 \times 10$ block of data in the original matrix. The OMI $\text{NO}_2$ data for two months (March 2008 and 2018) are shown in Figure~\ref{fig:NO2March2008}.
 
 \begin{figure}[!htb]
 	\centering
-%	\subfloat[][]{
-%		\includegraphics[width=0.45\textwidth]{./Graphics/NO2_March_2008_No_Bndry.pdf}
-%		\label{fig:NO2March1} % width=0.48\textwidth, height = 0.48\textheight
-%	}%
-%	\subfloat[][]{
-		\includegraphics[width=0.65\textwidth]{./Graphics/NO2_March_2008_With_Bndry.pdf}
-%		\label{fig:NO2March2}
-%	}
-	\caption{$\text{NO}_2$ data for March 2008.}
+	\subfloat[][]{
+		\includegraphics[width=0.48\textwidth]{./Graphics/NO2_March_2008_With_Bndry.pdf}
+		\label{fig:NO2March1} % width=0.48\textwidth, height = 0.48\textheight
+	}%
+	\subfloat[][]{
+		\includegraphics[width=0.48\textwidth]{./Graphics/NO2_March_2018_With_Bndry.pdf}
+		\label{fig:NO2March2}
+	}
+	\caption{$\text{NO}_2$ data for March 2008 (Figure~\ref{fig:NO2March1})  and March 2018 (Figure~\ref{fig:NO2March2}). }
 	\label{fig:NO2March2008}
 \end{figure}
 
-Using Algorithm~\ref{algo:events_extraction}, we extract events from this data set, which are clusters of high $\text{NO}_2$ levels spanning space and time. Events are extracted from a 3-dimensional data stream of $4 \times 180 \times 360$ array, where each $180 \times 360$ matrix corresponds to the $\text{NO}_2$ levels of a given month. The parameters used in Algorithm~\ref{algo:events_extraction} are $\alpha = 0.97$, $\epsilon=2$ and $\text{minPts} = 20$. There are 23 events/clusters in the 2008 data and 13 events/clusters in 2018 data. Figure~\ref{fig:ClustersNO2March2008} shows these clusters for March 2008 (corresponding to the data in Figure~\ref{fig:NO2March2008}), while clusters for March 2018 are shown in Figure~\ref{fig:ClustersNO2March2018}.\todo{What do the colors represent?}
+Using Algorithm~\ref{algo:events_extraction}, we extract events from this data set, which are clusters of high $\text{NO}_2$ levels spanning space and time. Events are extracted from a 3-dimensional data stream of $4 \times 180 \times 360$ array, where each $180 \times 360$ matrix corresponds to the $\text{NO}_2$ levels of a given month. The parameters used in Algorithm~\ref{algo:events_extraction} are $\alpha = 0.97$, $\epsilon=2$ and $\text{minPts} = 20$. There are 23 events/clusters in the 2008 data and 13 events/clusters in 2018 data. Figure~\ref{fig:ClustersNO2March2008} shows these clusters for March 2008 and 2018 (corresponding to the data in Figure~\ref{fig:NO2March2008}) with each cluster/event depicted by a single colour. \todo{What do the colors represent?}
 
 \begin{figure}[!hb]
 	\centering
-%	\subfloat[][]{
-%		\includegraphics[width=0.45\textwidth]{./Graphics/Clusters_NO2_March_2008_No_Bndry.pdf}
-%		\label{fig:ClustersNO2March20081} % width=0.48\textwidth, height = 0.48\textheight
-%	}%
-%	\subfloat[][]{
-		\includegraphics[width=0.55\textwidth]{./Graphics/Clusters_NO2_March_2008_With_Bndry.pdf}
-%		\label{fig:ClustersNO2March20082}
-%	}
-	\caption{Events extracted from $\text{NO}_2$ data for March 2008. Colours do not reflect $\text{NO}_2$ levels.}
+	\subfloat[][]{
+		\includegraphics[width=0.48\textwidth]{./Graphics/Clusters_NO2_March_2008_With_Bndry.pdf}
+		\label{fig:ClustersNO2March20081} % width=0.48\textwidth, height = 0.48\textheight
+	}%
+	\subfloat[][]{
+		\includegraphics[width=0.48\textwidth]{./Graphics/Clusters_NO2_March_2018_With_Bndry.pdf}
+		\label{fig:ClustersNO2March20082}
+	}
+	\caption{Events extracted from $\text{NO}_2$ data for March 2008 (Figure~\ref{fig:ClustersNO2March20081} ) and March 2018 (Figure~\ref{fig:ClustersNO2March20082}). Colours do not reflect $\text{NO}_2$ levels. Each event is depicted by a single colour.}
 	\label{fig:ClustersNO2March2008}
 \end{figure}
 
-\begin{figure}[!htb]
-	\centering
+%\begin{figure}[!htb]
+%	\centering
 %	\subfloat[][]{
 %		\includegraphics[width=0.45\textwidth]{./Graphics/Clusters_NO2_March_2018_No_Bndry.pdf}
 %		\label{fig:ClustersNO2March20181} % width=0.48\textwidth, height = 0.48\textheight
 %	}%
 %	\subfloat[][]{
-		\includegraphics[width=0.55\textwidth]{./Graphics/Clusters_NO2_March_2018_With_Bndry.pdf}
+%		\includegraphics[width=0.55\textwidth]{./Graphics/Clusters_NO2_March_2018_With_Bndry.pdf}
 %		\label{fig:ClustersNO2March20182}
 %	}
-	\caption{Events extracted from $\text{NO}_2$ data for March 2018. Colours do not reflect $\text{NO}_2$ levels.}
-	\label{fig:ClustersNO2March2018}
-\end{figure}
+%	\caption{Events extracted from $\text{NO}_2$ data for March 2018. Colours do not reflect $\text{NO}_2$ levels.}
+%	\label{fig:ClustersNO2March2018}
+%\end{figure}
 
 \begin{figure}[!htb]
 	\centering
  \subfloat[][]{
-	\includegraphics[width=0.5\textwidth]{./Graphics/High_Event_2018.pdf}
+	\includegraphics[width=0.48\textwidth]{./Graphics/High_Event_2008.pdf}
   \label{fig:HighestEventNO2200820181}
   }
   \subfloat[][]{
-  \includegraphics[width=0.45\textwidth]{./Graphics/Highest_Event_NO2_2008_2018.pdf}
+  \includegraphics[width=0.48\textwidth]{./Graphics/High_Event_2018.pdf} % Highest_Event_NO2_2008_2018.pdf
   \label{fig:HighestEventNO2200820182}
  }
- \caption{(a) The location of the event with the highest average $\text{NO}_2$ levels in March 2018. (b) The associated $\text{NO}_2$ in 2008 and 2018.????}
+ \caption{The two events with the highest average $\text{NO}_2$ levels for March 2008 (Figure~\ref{fig:HighestEventNO2200820181}) and March 2018 (Figure~\ref{fig:HighestEventNO2200820182}).}
+ \label{fig:HighestEventNO220082018}
 \end{figure}
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=0.48\textwidth]{./Graphics/Highest_Event_NO2_2008_2018.pdf} 
+     \caption{The average $\text{NO}_2$ levels for the two events in Figure~\ref{fig:HighestEventNO220082018}.}
+    \label{fig:HighestEventNO2200820183}
+\end{figure}
+
 \begin{figure}[!htb]
   \centering
  \subfloat[][]{
@@ -691,7 +710,9 @@ Using Algorithm~\ref{algo:events_extraction}, we extract events from this data s
   \label{fig:DifferenceInNO2Levels}
 \end{figure}
 
-For each event we compute features 1--8 and 11 from the list of features in Section~\ref{sec:Featurelist}. We analyse the event which has the highest average $\text{NO}_2$ levels for 2008 and 2018. The map in Figure~\ref{fig:HighestEventNO2200820181} shows the event location in March 2018 and the graph in Figure~\ref{fig:HighestEventNO2200820182} shows that the average $\text{NO}_2$ levels have decreased in 2018 compared to 2008 for this event.\todo{How can it be the same event 10 years apart?}
+For each event we compute features 1--8 and 11 from the list of features in Section~\ref{sec:Featurelist}. These features are chosen for ease of computation. Specially as we are not focusing on event classification in this application, we do not compute the other features which involve fitting splines for 3-dimensional data.  
+
+We analyse the two events which have the highest average $\text{NO}_2$ levels for 2008 and 2018. The maps in Figure~\ref{fig:HighestEventNO220082018} show the spatial locations and the $\text{NO}_2$ levels of these two events for March 2008 and 2018. As these two events are geographically at the same location, we compare the average  $\text{NO}_2$ levels for these two events for the months from March to June in 2008 with the same months in 2018. The graph in Figure~\ref{fig:HighestEventNO2200820183} shows that the average $\text{NO}_2$ levels have decreased in 2018 compared to 2008 for this geographical location.  \todo{How can it be the same event 10 years apart?}
 
 Next we match the events in 2008 and 2018 by their spatial location. We do a simple analysis of these $\text{NO}_2$ events. We want to know if these $\text{NO}_2$ events have increased or decreased in severity during this 10 year time gap. For each of these matched events we find the average $\text{NO}_2$ level difference between 2018 and 2008. Figure~\ref{fig:DifferenceInNO2Levels} shows the graph of these differences. We see that 4 events have positive $\text{NO}_2$ differences for each month, i.e., the average $\text{NO}_2$ levels have increased from 2008 to 2018 for these 4 events. In addition event 15 is different from other events. Figure~\ref{fig:PositiveDifferentEventsNO220082018} shows the locations of the increased $\text{NO}_2$ events in March 2018 along with the location of the outlying event 15.
 
@@ -720,6 +741,13 @@ This paper has proposed a framework for event extraction and event classificatio
 In addition, we have propose a simple algorithm for event extraction, which can be used on two or three dimensional data streams. The applicability of our event extraction algorithm has been demonstrated using the $\text{NO}_2$ data from NASA's NEO website.
 
 Future directions for this research include extending the age-varying events classifier to have automatically updating coefficients, and including a variety of event extraction processes.
+
+% =======================================================================
+\section{Supplementary material}
+% =======================================================================
+{\bf R-package eventstream:} This package contains Algorithm~\ref{algo:events_extraction} for event extraction, the age-varying event classifier for early event classification, functions for synthetic data generation, the fibre-optic data stream and $\text{NO}_2$ data for 2008 and 2018. It is available from Github at \url{https://github.com/sevvandi/eventstream}. \\
+{\bf Scripts:} There are three files containing the R code used Section~\ref{sec:Experiments} and one other file.  The file \url{Supp_Mat_1.R}, \url{Supp_Mat_2.R} and \url{Supp_Mat_3.R} contain the code applicable for synthetic data in Section~\ref{subsec:Synthetic}, fibre optic data in Section~\ref{sec:FibreOpticExperiment} and $\text{NO}_2$ data in Section~\ref{sec:NO2Exp}. The file \url{Supp_Mat_4.R} contains the code used to produce some other graphs and images in the paper. \\
+{\bf Other R-packages:} We have used the following R-packages in this paper: \textit{dma} \cite{dma}, \, \textit{abind} \cite{abind}, \, \textit{AtmRay} \cite{atmray}, \, \textit{pROC} \cite{proc}, \,  \textit{reshape2} \cite{reshape2}, \,  \textit{ggplot2} \cite{ggplot2}, \, \textit{raster} \cite{raster} and \textit{maps} \cite{maps}.   
 
 % =======================================================================
 \section*{Acknowledgements}
