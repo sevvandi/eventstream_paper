@@ -12,6 +12,7 @@
 \usepackage[margin=2cm]{geometry}
 \usepackage[linesnumbered,lined,boxed,commentsnumbered]{algorithm2e}
 \usepackage{tikz}
+\usepackage{comment}
 \usetikzlibrary{shapes.geometric, arrows}
 \tikzstyle{standard} = [rectangle, rounded corners, minimum width=1.5cm, minimum height=2cm,text width=2.5 cm, text centered, draw=black, fill=black!5]
 \tikzstyle{io} = [trapezium, trapezium left angle=70, trapezium right angle=110, minimum width=3cm, minimum height=1cm, text centered, draw=black, fill=blue!30]
@@ -541,7 +542,8 @@ The number of predicted positives in PPV is the sum of true positives and false 
 
 In contrast, the area under the receiver operator characteristic (ROC) curve is a single measure that captures the effectiveness of a classifier. The ROC curve is a plot of the true positive rate against the false positive rate for different classification thresholds. The area under the curve (AUC) provides a measure of discrimination between positive and negative classes. The AUC can be interpreted as the probability that a positive observation is ranked higher than a negative observation. The AUC does not depend on the classification threshold as it is an aggregate measure. An AUC closer to 1 is reflective of a good model, while a random predictor will give an AUC closer to 0.5.
 
-The graphs in Figures~\ref{fig:RealPPV},~\ref{fig:RealNPV} and~\ref{fig:RealROC} give the PPV, NPV and AUC values of the 3 classifiers grouped by classifier and fold. For PPV and NPV, we use a probability threshold of $0.5$, i.e. if the output probability is greater than 0.5, it is deemed class A, and class B otherwise.  Table~\ref{tab:AverageAccuracyReal} gives the average PPV, NPV and AUC values with their standard deviations over the $4$-folds for the real data stream.
+%The graphs in Figures~\ref{fig:RealPPV},~\ref{fig:RealNPV} and~\ref{fig:RealROC} give the PPV, NPV and AUC values of the 3 classifiers grouped by classifier and fold. 
+
 
 % PPV - dev events 0.964285714	1	1	0.964285714
 % PPV - dma 0.683333333	0.816071429	0.85625	0.6375
@@ -555,6 +557,9 @@ The graphs in Figures~\ref{fig:RealPPV},~\ref{fig:RealNPV} and~\ref{fig:RealROC}
 % AUC - dma 0.874206349	0.985603408	0.902065826	0.943148926
 % AUC - glm 0.873358586	0.819453463	0.816675685	0.843659812
 
+%----------------------------------------------------------
+% BEGIN COMMENT
+\begin{comment}
 \begin{figure}[!h]
 	\centering
 	\subfloat[][]{
@@ -596,7 +601,9 @@ The graphs in Figures~\ref{fig:RealPPV},~\ref{fig:RealNPV} and~\ref{fig:RealROC}
 	\caption{AUC of the 3 classifiers with 4-fold cross validation grouped by classifier in Figure~\ref{fig:ROC1} and by fold in Figure~\ref{fig:ROC2}.}
 	\label{fig:RealROC}
 \end{figure}
-
+\end{comment}
+% END COMMENT
+%-----------------------------------------------------------------------------------
 
 \begin{table}[!h]
 	\centering
@@ -621,8 +628,7 @@ The graphs in Figures~\ref{fig:RealPPV},~\ref{fig:RealNPV} and~\ref{fig:RealROC}
 	\end{tabular}
 	 \caption{Mean and standard deviation of PPV, NPV and AUC $(\%)$ over $4$ folds.}\label{tab:AverageAccuracyReal}
 \end{table}
-
-From Table~\ref{tab:AverageAccuracyReal}, we see that the age-varying events classifier has the highest average PPV and the cascaded state space models have the highest average NPV for all event ages. Of the two classifiers, state space models are more conservative in predicting class A events compared with the age-varying events classifier. That is, if the state space models predict an event as belonging to class A, it is more likely that the actual event is of class A compared with the age-varying classifier. This is supported by the high mean NPV values and the associated low standard deviations of the state space models. On the other hand, the age-varying events classifier is much more likely to catch all class A events compared with the state space models as seen by the higher PPV values. Whether it is better to be conservative and miss some class A events while being very accurate in terms of the predicted class A events, or to identify all class A events while giving some false positives, depends on the application. Often the cost of  false positives and false negatives are not the same; for example consider a medical test for cancer. Thus, we see that our proposed two models have different strengths. In addition, both these models outperform the logistic regression classifier as seen by the AUC values.
+Table~\ref{tab:AverageAccuracyReal} gives the average PPV, NPV and AUC values with their standard deviations over the $4$-folds for the fibre-optic data stream. For PPV and NPV, we use a probability threshold of $0.5$, i.e. if the output probability is greater than 0.5, it is deemed class A, and class B otherwise. From Table~\ref{tab:AverageAccuracyReal}, we see that the age-varying events classifier has the highest average PPV and the cascaded state space models have the highest average NPV for all event ages. Of the two classifiers, state space models are more conservative in predicting class A events compared with the age-varying events classifier. That is, if the state space models predict an event as belonging to class A, it is more likely that the actual event is of class A compared with the age-varying classifier. This is supported by the high mean NPV values and the associated low standard deviations of the state space models. On the other hand, the age-varying events classifier is much more likely to catch all class A events compared with the state space models as seen by the higher PPV values. Whether it is better to be conservative and miss some class A events while being very accurate in terms of the predicted class A events, or to identify all class A events while giving some false positives, depends on the application. Often the cost of  false positives and false negatives are not the same; for example consider a medical test for cancer. Thus, we see that our proposed two models have different strengths. In addition, both these models outperform the logistic regression classifier as seen by the AUC values.
 
 \subsection{Nitrogen dioxide monitoring}\label{sec:NO2Exp}
 
