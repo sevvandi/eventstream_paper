@@ -168,7 +168,7 @@ In Section~\ref{sec:Experiments} we discuss results of our framework using synth
 
 % =======================================================================
 % =======================================================================
-\section{Event extraction and feature computation} \label{sec:EventExtract}
+\section{Events, features and partial observations} \label{sec:EventExtract}
 % =======================================================================
 
 \subsection{Event extraction}
@@ -268,10 +268,7 @@ For two-dimensional events we compute the following features:
 For three-dimensional data streams we compute a subset of the above features. In particular, we compute features 1--8 from the above list and an equivalent of feature 14 using the global standard deviation and the global mean.  These features now provide a compact way to represent a data stream and the embedded events, summarising salient properties of the time window in terms of event signal strength and shape. This summary becomes input to a classifier to identify types of events.
 
 
-% =======================================================================
-% =======================================================================
-\section{Partial/incomplete observations} \label{sec:Notation}
-% =======================================================================
+\subsection{Partial/incomplete observations} \label{sec:Notation}
 
 In the classical setting, a classification problem comprises observations $(\bm{x}_i, y_i)$ for $i \in 1,\dots, N$ where $\bm{x}_i \in \mathbb{R}^b$ is the attribute vector of the $i$th observation and $y_i$ is its class label. The task of the classifier is to learn the class boundary by using the given set of observations. Then for any new observation $\bm{x}_j$, the classifier can predict its class label using the learned class boundaries. Let us call this a \textbf{standard classifier}.
 
