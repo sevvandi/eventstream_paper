@@ -6,3 +6,4 @@ main.pdf
 *.fls
 *.log
 *.synctex.gz
+.Rproj.user

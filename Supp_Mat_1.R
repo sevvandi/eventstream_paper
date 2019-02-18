@@ -1,7 +1,7 @@
 #  THIS FILE CONTAINS EXPERIMENTS USING SYNTHETIC DATA
 # -----------------------------------------------------------------------------------
-# Experiment 1.1 - Synthetic data - Age-varying events Classifier & glm
-# Experiment 1.2 - Synthetic data - state space models
+# Experiment 1.1 - Synthetic data - SAVEC & glm
+# Experiment 1.2 - Synthetic data - DAVEC
 # Output 1.1 - Synthetic data associated graphs
 # -----------------------------------------------------------------------------------
 
@@ -15,7 +15,7 @@ library("reshape2")
 library("ggplot2")
 
 # -----------------------------------------------------------------------------------
-# Experiment 1.1 - Synthetic data - Age-varying events Classifier & glm
+# Experiment 1.1 - Synthetic data - SAVEC & glm
 # -----------------------------------------------------------------------------------
 
 accuracy_td_stages <- matrix(0, nrow=5, ncol=4)
@@ -110,7 +110,7 @@ apply(accuracy_glm_stages,2,sd)
 
 
 # -----------------------------------------------------------------------------------
-# Experiment 1.2 - Synthetic data - state space models
+# Experiment 1.2 - Synthetic data - DAVEC
 # -----------------------------------------------------------------------------------
 accuracy_dma_stages <- matrix(0, ncol=4, nrow=5)
 colnames(accuracy_dma_stages) <- c("dma_T1", "dma_T2", "dma_T3", "dma_T4")
@@ -120,7 +120,7 @@ for(j in 1:5){
   feat_all <- extract_event_ftrs(out$data, supervised=TRUE, details=out$details, thres=0.95, step_size = 8, folder="None", vis=FALSE, tt=8)
 
   class_col <- dim(feat_all)[2]
-  Y <- feat_all[, class.col, ]
+  Y <- feat_all[, class_col, ]
   X0 <- feat_all[, -c(1, 7, 8, 14:class_col), ]  
 
   X1.1 <- scale(X0[,,1], center=TRUE, scale=TRUE)
@@ -196,7 +196,7 @@ accuracy_td_stages <- cbind.data.frame(1:5, accuracy_td_stages)
 colnames(accuracy_td_stages) <- c("Fold","T1", "T2", "T3", "T4")
 accuracy_td_stages <- as.data.frame(accuracy_td_stages)
 df1 <- melt(id="Fold",accuracy_td_stages)
-df1 <- cbind.data.frame(df1, rep("A.V. Events", dim(df1)[1]))
+df1 <- cbind.data.frame(df1, rep("SAVEC", dim(df1)[1]))
 df1
 colnames(df1) <- c("Fold", "Age", "Accuracy", "Classifier")
 df1$Accuracy <- df1$Accuracy*100
@@ -218,12 +218,12 @@ accuracy_dma_stages <- cbind.data.frame(1:5, accuracy_dma_stages)
 colnames(accuracy_dma_stages) <- c("Fold","T1", "T2", "T3", "T4")
 accuracy_dma_stages <- as.data.frame(accuracy_dma_stages)
 df3 <- reshape2::melt(id="Fold",accuracy_dma_stages)
-df3 <- cbind.data.frame(df3, rep("State Space", dim(df3)[1]))
+df3 <- cbind.data.frame(df3, rep("DAVEC", dim(df3)[1]))
 df3
 colnames(df3) <- c("Fold", "Age", "Accuracy", "Classifier")
 df3$Accuracy <- df3$Accuracy*100
 
-df <- rbind(df1, df2, df3)
+df <- rbind(df1, df3, df2)
 
 pp <- ggplot(df, aes(Age,Accuracy)) + geom_point(aes(color=Classifier))
 pp +  geom_line(data=df1, aes(color=Classifier, group=Fold)) + geom_line(data=df2, aes(color=Classifier, group=Fold) ) + geom_line(data=df3, aes(color=Classifier, group=Fold)) + facet_grid(.~Classifier)  +  xlab("Event Age")  + theme_bw()
