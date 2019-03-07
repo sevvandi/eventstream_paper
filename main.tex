@@ -9,18 +9,23 @@
 \usepackage{todonotes}
 \usepackage{graphicx, subfig, rotating, booktabs, multirow, url}
 \usepackage[no-weekday]{eukdate}
-\usepackage[margin=2cm]{geometry}
 \usepackage[linesnumbered,lined,boxed,commentsnumbered]{algorithm2e}
 \usepackage{tikz}
 \usepackage{comment}
 \usepackage{natbib}
+\usepackage{titling}
+\usepackage{blindtext}
+
+\usepackage[margin=3cm]{geometry}
 
 \usetikzlibrary{shapes.geometric, arrows}
 \tikzstyle{standard} = [rectangle, rounded corners, minimum width=1.5cm, minimum height=2cm,text width=2.5 cm, text centered, draw=black, fill=black!5]
+\tikzstyle{state} = [ellipse, rounded corners, minimum width=1.5cm, minimum height=2cm,text width=1.5 cm, text centered, draw=black, fill=black!5]
 \tikzstyle{io} = [trapezium, trapezium left angle=70, trapezium right angle=110, minimum width=3cm, minimum height=1cm, text centered, draw=black, fill=blue!30]
 \tikzstyle{process} = [rectangle, minimum width=3cm, minimum height=1cm, text centered, text width=3cm, draw=black, fill=orange!30]
 \tikzstyle{decision} = [diamond, minimum width=3cm, minimum height=1cm, text centered, draw=black, fill=green!30]
 \tikzstyle{arrow} = [thick,->,>=stealth]
+\tikzstyle{bigbox} = [rectangle, rounded corners, minimum width=1.5cm, minimum height=6cm,text width=3 cm,  text centered, draw=black, fill=black!5]
 
 %% CAPTIONS
 \RequirePackage{caption}
@@ -51,18 +56,27 @@
 \DeclareMathOperator*{\argmax}{arg\,max}
 \DeclareMathOperator*{\E}{E}
 
+
+
 % =======================================================================
 \begin{document}
 % =======================================================================
+\title{\bf{Early classification of spatio-temporal events \\ using partial information} \\}
+\author{\\ Sevvandi Kandanaarachchi$^1$  \\ and \\  Rob J Hyndman$^1$  \\ and \\  Kate Smith-Miles$^2$ \\}
+\date{%
+   \scriptsize{ $^1$Faculty of Business and Economics, Monash University, Clayton VIC 3800, Australia.\\%
+    $^2$School of Mathematics and Statistics, The University of Melbourne, Parkville, VIC 3010, Australia\\[2ex]}% 
+    \today
+}
 
-\title{Early classification of spatio-temporal events using time-varying models}
-\author{Sevvandi Kandanaarachchi, Rob J Hyndman, Kate Smith-Miles}
-\maketitle
-
+\begin{titlingpage}
+\maketitle 
 \begin{abstract}
-This paper investigates early event classification in spatio-temporal data streams. We propose a framework for early classification that considers the relationship between the features of an event and its age. The framework incorporates an event extraction algorithm as well as two early event classification algorithms, which use a series of logistic regression classifiers with penalty terms and state space models. We apply this framework to synthetic and real world problems and demonstrate its reliability and broad applicability. The algorithms and data are available in the R package \textit{eventstream}, and other code is provided in the supplementary material.
+ This paper investigates early event classification in spatio-temporal data streams, where events need to be classified using partial information, i.e. while the event is still ongoing. The framework incorporates two early event classification algorithms with different strengths as well as an event extraction algorithm.  We apply this framework to synthetic and real world problems and demonstrate its reliability and broad applicability. The algorithms and data are available in the R package \textit{eventstream}, and other code in the supplementary material. 
 \end{abstract}
+\end{titlingpage}
 
+\newgeometry{top=2cm,bottom=2cm,right=2cm,left=2cm}
 %% Outline of paper
 %% Introduction
 %% 		- Small introduction to data-streams and interesting topics
@@ -93,52 +107,124 @@ This paper investigates early event classification in spatio-temporal data strea
 \section{Introduction}
 % =======================================================================
 
-Early detection and classification of emerging events in data streams is an important challenge in our data-rich world. Data streams may arise from many different applications including social media, Internet of Things, video surveillance, epidemiology and wireless sensors, to name a few. In each of these diverse applications, there are typically events that occur and are of interest because of their disruptive behaviour to the system. In particular, we are interested in events that start, develop for some time, and stop at a certain time. Such events can be characterized by measaurable properties or features, including the ``age'' of the event --- the difference between the current time and the start time of the event --- with other event properties varying according to its age.
+Early detection and classification of emerging events in data streams is an important challenge in our data-rich world. Data streams may arise from many different applications including social media, Internet of Things, video surveillance, epidemiology and wireless sensors, to name a few. In each of these diverse applications, there are typically events that occur and are of interest because of their disruptive behaviour to the system.  % Such events can be characterised by measurable properties or features, including the ``age'' of the event -- the difference between the current time and the start time of the event -- with other event properties varying according to its age. 
 
-Given that interesting events in data streams arise in a variety of applications and are studied from the perspective of different disciplines, the field suffers from a plethora of discipline-specific techniques that have been developed, leading to little consensus on associated terminology and methodology across disciplines. On the one hand, similar terms are used to describe different phenomena --- this is called the synonym problem \citep{zhou2014spatiotemporal}. On the other hand, different terms are used to describe similar phenomena --- known as the homonym problem \citep{zhou2014spatiotemporal}. This makes it difficult to objectively compare results and methods across disciplines. For example, the term ``event detection'' is used in video surveillance and video applications \citep{adam2008robust, ke2005efficient, medioni2001event}, social media \citep{weng2011event, li2012tedas, abdelhaq2013eventweet}, broadcast news stories \citep{allan1998line, li2005probabilistic} and wireless sensor networks \citep{yin2009spatio, mao2015online}. However, it is difficult to apply an event detection method used in one application to another domain as many contextual properties depend on the problem domain, resulting in a proliferation of custom-made algorithms. As a result, event detection has become a discipline-specific study with little overlap between different research problems. Similarly spatio-temporal event detection, which is a popular sub-topic, has emerged from different applications such as river sensor networks \citep{mao2015online}, traffic data \citep{souto2016event}, wireless sensor networks \citep{mousavi2013spatio}, social networks \citep{cheng2014event} and epidemiology \citep{gomide2011dengue}. While spatio-temporal event detection has been studied extensively, early classification of spatio-temporal events has not received much attention. Mostly standard classification techniques are used on detected events where the focus has been on event detection \citep{kang2014detecting}.
+In particular, we are interested in events that start, develop for some time, and stop at a certain time. Such events can be characterised by measurable properties or features, including the ``age'' of the event.  It is a challenge to classify these events while they are still developing because only partial information is available at this stage. Once the events have stopped developing -- when the events are finished, it is easier to classify them as the complete event features are now available. For example, it is easier to differentiate a daffodil from a tulip when both are in full bloom, but more difficult to differentiate a daffodil bud from a tulip bud without resorting to other information such as characteristics of leaves. Another example is identifying a network intrusion attack in its early stages. While it may be easier to identify a breach after it has happened, it is more difficult to identify which bits of network traffic is causing the breach while it is happening \citep{suthaharan2014big}.       
+%However, in applications where early detection is important, it is not feasible  to wait until an event is finished to make a call.       
+
+
+\begin{figure}[!ht]
+    \centering
+	\begin{tikzpicture}[node distance=2cm, auto]
+		\node (dev) [state] {Developing event};
+		\node (fin) [state, right of=dev, xshift=3.5cm] {Finished event};
+		\draw [arrow] (dev) -- (fin);
+		\node (pobs) [standard, below of=dev, yshift=-1cm]{Partial observations};
+		\node (fullobs) [standard, right of=pobs, xshift=3.5cm]{Complete observations};
+		\draw [arrow] (pobs) -- (fullobs);
+		\draw [dashed] (dev) -- (pobs);
+		\draw [dashed] (fin) -- (fullobs);
+	\end{tikzpicture}
+	\caption{Event states and partial observations.}
+	\label{fig:0_1}
+\end{figure}
+
+In this regard, we can think of these events as having two states; developing  and finished (Figure \ref{fig:0_1}). The partial information contained in the developing events give rise to partial or premature observations, while the finished events give rise to complete observations. As the event develops, it gives rise to a series of partial observations -- each partial observation encapsulating more information than its predecessor -- culminating with the complete observation (Figure \ref{fig:0_2}). Thus partial observations vary with the age of the event: the difference between the current time and the start time of the event .  If early classification is important, one needs to take  partial observations into account in the classification process. While event detection in data streams has received much attention from different disciplines ranging from video surveillance to social media  \citep{adam2008robust, ke2005efficient, medioni2001event, weng2011event, li2012tedas, abdelhaq2013eventweet,allan1998line,yin2009spatio, mao2015online}, they have not been explored for developing/premature event classification to the best of our knowledge.  
+
+\begin{figure}[!ht]
+    \centering
+	\begin{tikzpicture}[node distance=2cm, auto]
+		\node (pobst1) [standard]{Partial observation at age $t_1$};
+		\node (pobst2) [standard, right of=pobst1, xshift=2cm]{Partial observation at age $t_2$};
+		\node (fullobs) [standard, right of=pobst2, xshift=5cm]{Complete observation};
+		\draw [arrow] (pobst1) -- (pobst2);
+		\draw [arrow] (pobst2) -- (6.5,0);
+        \draw [arrow] (8.5,0) -- (fullobs);
+        \draw[dashed] (6.5,0) -- (8.5,0);
+	\end{tikzpicture}
+	\caption{Partial observations growing with event-age.}
+	\label{fig:0_2}
+\end{figure}
+
+
+
+%Given that interesting events in data streams arise in a variety of applications and are studied from the perspective of different disciplines, the field suffers from a plethora of discipline-specific techniques that have been developed, leading to little consensus on associated terminology and methodology across disciplines. On the one hand, similar terms are used to describe different phenomena --- this is called the synonym problem \citep{zhou2014spatiotemporal}. On the other hand, different terms are used to describe similar phenomena --- known as the homonym problem \citep{zhou2014spatiotemporal}. This makes it difficult to objectively compare results and methods across disciplines. For example, the term ``event detection'' is used in video surveillance and video applications \citep{adam2008robust, ke2005efficient, medioni2001event}, social media \citep{weng2011event, li2012tedas, abdelhaq2013eventweet}, broadcast news stories \citep{allan1998line, li2005probabilistic} and wireless sensor networks \citep{yin2009spatio, mao2015online}. However, it is difficult to apply an event detection method used in one application to another domain as many contextual properties depend on the problem domain, resulting in a proliferation of custom-made algorithms. As a result, event detection has become a discipline-specific study with little overlap between different research problems. Similarly spatio-temporal event detection, which is a popular sub-topic, has emerged from different applications such as river sensor networks \citep{mao2015online}, traffic data \citep{souto2016event}, wireless sensor networks \citep{mousavi2013spatio}, social networks \citep{cheng2014event} and epidemiology \citep{gomide2011dengue}. While spatio-temporal event detection has been studied extensively, early classification of spatio-temporal events has not received much attention. Mostly standard classification techniques are used on detected events where the focus has been on event detection \citep{kang2014detecting}.
 
 %OK, so you are describing a situation where the feature vector can't really be computed accurately until the event is finished (so we can know it's shape etc.) but at earler times we have an incomplete/partial observation, and we want to know if we can use this to do early classifation of events (assuming that we have already been successful in early detection of events?)
 
-For events with age-varying behaviour, standard classification techniques may not be suitable, especially if early detection is important. This is because the event features may change as the event progresses, such that an accurate feature vector can only be computed after the event is finished. For applications where early classification is important, this is not satisfactory as one cannot wait until the event finishes before classifying it. While the event is still progressing, we have access to incomplete or partial information, giving rise to a  incomplete or premature feature vector. Our focus is on developing new methods to reliably classify events using this premature feature vector.
 
-Fundamentally, this problem can be tackled by embedding age-varying coefficients in a learned model \citep{hastie1993varying}. A linear model with age-varying coefficients is given by
+
+% For events with age-varying behaviour, standard classification techniques may not be suitable, especially if early detection is important. This is because the event features may change as the event progresses, such that an accurate feature vector can only be computed after the event is finished. For applications where early classification is important, this is not satisfactory as one cannot wait until the event finishes before classifying it. While the event is still progressing, we have access to incomplete or partial information, giving rise to a  incomplete or premature feature vector. Our focus is on developing new methods to reliably classify events using this premature feature vector.
+
+A general framework for event classification in data streams comprises different stages : \begin{inparaenum} \item data pre-processing \item event extraction \item feature computation and \item event classification  \end{inparaenum}. This framework, augmented with partial observations structure gives the additional functionality of early event classification as depicted in Figure~\ref{fig:1_1}. In our framework we do not consider data pre-processing as a separate stage as this is highly dependent on the application.   
+
+% \begin{figure}[!hb]
+% 	\begin{tikzpicture}[node distance=2cm]
+% 		\node (start) [standard] {Data Stream};
+% 		\node (extract) [standard, right of=start, xshift=1.5cm] {Event \\ Extraction};
+% 		\node (features) [standard, right of=extract, xshift=1.5cm] {Feature \\ Computation};
+% 		\node (classify) [standard, right of=features, xshift=1.5cm] {Event \\ Classification};
+% 		\node (output) [standard, right of=classify, xshift=1.5cm] {Output};
+% 		\draw [arrow] (start) -- (extract);
+% 		\draw [arrow] (extract) -- (features);
+% 		\draw [arrow] (features) -- (classify);
+% 		\draw [arrow] (classify) -- (output);
+% 	\end{tikzpicture}
+% 	\caption{Framework for event extraction and classification for spatio-temporal data.}
+% 	\label{fig:1}
+% \end{figure}
+
+
+\begin{figure}[!hb]
+	\begin{tikzpicture}[node distance=2cm]
+		\node (start) [standard] {Data Stream};
+		\node (extract) [bigbox, right of=start, xshift=1.5cm] {};
+		\node (dummy)[above of=extract, yshift=0.8cm] {Event extraction};
+		\node (devEv) [state, right of=start, xshift=1.5cm, yshift=1.5cm]{Developing events};
+		\node (finEv) [state, right of=start, xshift=1.5cm, yshift=-1.5cm]{Finished events};
+ 		\node (features) [bigbox, right of=extract, xshift=2cm] {};
+ 		\node (dummy)[above of=features, yshift=0.8cm] {Feature computation};
+ 		\node (Pobs) [state, right of=devEv, xshift=2cm]{Partial observations};
+		\node (Cobs) [state, right of=finEv, xshift=2cm]{Complete observations};
+ 		\node (classify) [bigbox, right of=features, xshift=2cm] {Early \\  Event \\   Classification};
+ 		\node (output) [standard, right of=classify, xshift=1.5cm] {Output};
+ 		\draw [arrow] (start) -- (extract);
+ 		\draw [arrow] (extract) -- (features);
+ 		\draw [arrow] (features) -- (classify);
+ 		\draw [arrow] (classify) -- (output);
+ 		\draw[dashed] (devEv) -- (Pobs);
+ 		\draw[dashed] (finEv) -- (Cobs);
+ 		\draw[dashed] (Pobs) -- (classify);
+ 		\draw[dashed] (Cobs) -- (classify);
+ 		\draw[dashed] (start) -- (devEv);
+  		\draw[dashed] (start) -- (finEv);
+	\end{tikzpicture}
+	\caption{Framework for event extraction and classification for spatio-temporal data.}
+	\label{fig:1_1}
+\end{figure}
+
+
+Fundamentally, early event classification can be tackled by embedding age-varying coefficients in a learned model \citep{hastie1993varying}. A linear model with age-varying coefficients is given by
 \begin{equation}\label{eq:Int1}
 	y_t = a_0(t) + a_1(t) x_1(t) + \dots + a_b(t)x_b(t) + \varepsilon_t \, ,
 \end{equation}
-where $y_t$ is the output at age $t$, $a_i(t)$ are the age-varying coefficients, and $x_i(t)$ are the attributes of the event at age $t$. A logistic model with age-varying coefficients is given by Equations \eqref{eq:Int1} and \eqref{eq:Int2}:
+where $y_t$ is the output at age $t$, $a_i(t)$ are the age-varying coefficients, and $x_i(t)$ are the attributes of the event at age $t$, i.e. the partial/premature observation. A logistic model with age-varying coefficients is given by Equations \eqref{eq:Int1} and \eqref{eq:Int2}:
 \begin{equation}\label{eq:Int2}
 	z_t = e^{y_t}/(1 + e^{y_t}) \, ,
 \end{equation}
 where $z_t$ is the probability of the event being of a given class. As an event develops, the features $x_i(t)$ change with the age of the event, while keeping the class label constant. Thus, it is clear that the coefficients $a_i(t)$ need to change with the age of the event.
 
-At this point, we note that concept drift \citep{widmer1996learning, tsymbal2004problem,klinkenberg2000detecting,gama2014survey} or non-stationarity of data streams \citep{hulten2001mining, gama2010knowledge, gaber2005mining} is different from age-varying events. As we will show in Section~\ref{subsec:Synthetic}, age-varying events can occur in stationary data streams or data streams without any concept drift. This is because age-varying behaviour comprises change within the event as opposed to a change within the data stream. Even though non-stationarity and time-varying models have been studied in different contexts \citep{harvey1989time, wang1998cluster, hoover1998nonparametric}, they have not been explored in the context of premature event classification to the best of our knowledge.
+At this point, we note that concept drift \citep{widmer1996learning, tsymbal2004problem,klinkenberg2000detecting,gama2014survey} or non-stationarity of data streams \citep{hulten2001mining, gama2010knowledge, gaber2005mining} is different from age-varying events. For non-stationary data streams the distribution of data changes with time. For example consider a fixed part of a river, which is monitored for fluctuations in water volume and animals in the river. In months of heavy rains the water volume increases changing the distribution compared to previous months. This is an example of non-stationarity. In contrast age-varying events are about the extracted events and not the data-stream. To continue with the same example consider a log appearing on this portion of the river. When the log comes closer and the image becomes clearer, suppose it becomes apparent that it is not a log, but a crocodile. This is an example of an age-varying event. Clearly, from the time when the log appeared to the time when it was detected that it was a crocodile, no significant changes in  water volume or the animal distributions took place. The volume of water and the average number of crocodiles in the river does not need to change when the perception of the log changed to that of a crocodile as a result of more information. Thus age-varying events comprise change within the event as a result of maturing partial observations,  while non-stationarity is on change within the data stream.  
+%As we will show in Section~\ref{subsec:Synthetic}, age-varying events can occur in stationary data streams or data streams without any concept drift.  This is because age-varying behaviour comprises change within the event as opposed to a change within the data stream. 
+%Even though non-stationarity and time-varying models have been studied in different contexts \citep{harvey1989time, wang1998cluster, hoover1998nonparametric}, they have not been explored in the context of premature event classification to the best of our knowledge.
 
 %may last time-dependent class boundary is not encapsulated in standard classifiers.
 % Our focus is on early classification of time dependent events. Specifically, early classification of spatio-temporal events with contiguous spatial dimensions.
 %We note that age and time are different quantities. The age of an event is the time duration for which it has been growing, i.e. the difference between the current time and the birth time of the event, where as time refers to the current time. We investigate time-dependent models for spatio-temporal events that change with event-age.
 
-We explore early event classification using two approaches that are based on different principles: 1) logistic regression; and 2) state-space models. These two approaches complement each other as logistic regression by itself is a static model more suited for stationary distributions, and a state space model coupled with a Kalman filter can update easily, which is advantageous for non-stationary data distributions. On the other hand, logistic regression may give better results than state space models for a stable data distribution.
 
-Our proposed framework, depicted in Figure~\ref{fig:1}, can be used in applications that give rise to spatio-temporal events with contiguous spatial dimensions. Typically, pre-processing is also a common step done before event extraction. However we do not focus on pre-processing data as techniques differ depending on the application. As event extraction is needed before classification, we also propose a simple method for event extraction. We make this work available in the R package \textit{eventstream} \citep{eventstream}.
-
-\begin{figure}[!hb]
-	\begin{tikzpicture}[node distance=2cm]
-		\node (start) [standard] {Data Stream};
-		\node (extract) [standard, right of=start, xshift=1.5cm] {Event \\ Extraction};
-		\node (features) [standard, right of=extract, xshift=1.5cm] {Feature \\ Computation};
-		\node (classify) [standard, right of=features, xshift=1.5cm] {Event \\ Classification};
-		\node (output) [standard, right of=classify, xshift=1.5cm] {Output};
-
-		\draw [arrow] (start) -- (extract);
-		\draw [arrow] (extract) -- (features);
-		\draw [arrow] (features) -- (classify);
-		\draw [arrow] (classify) -- (output);
-	\end{tikzpicture}
-	\caption{Framework for event extraction and classification for spatio-temporal data.}
-	\label{fig:1}
-\end{figure}
-
-Figure~\ref{fig:Real_World_Data} shows the heatmap of a dataset produced from a fibre optic cable. A pulse is periodically sent through the cable and this results in a data matrix where each horizontal row gives the strength of the signal at a fixed location $x_0$, and each vertical column gives the strength of the signal along the cable at a fixed time $t_0$. In this dataset the yellow parts represent high intensity values and the blue parts represent low intensity values.
+\subsection{Real world example}\label{subsec:RealWorld}
+We turn to a real application where age-varying events occur. Figure~\ref{fig:Real_1} shows the heatmap of a dataset produced from a fibre optic cable. A pulse is periodically sent through the cable and this results in a data matrix where each horizontal row gives the strength of the signal at a fixed location $x_0$, and each vertical column gives the strength of the signal along the cable at a fixed time $t_0$. In this dataset the yellow parts represent high intensity values and the blue parts represent low intensity values.
 
 \begin{figure}
 %	\centering
@@ -151,16 +237,39 @@ Figure~\ref{fig:Real_World_Data} shows the heatmap of a dataset produced from a 
 		\label{fig:Real_Feat_1} % width=0.48\textwidth, height=0.2\textheight  width=0.48\linewidth
 	}
 
-	\caption{Figure~\ref{fig:Real_1} shows data from a fibre optic cable. We extract events  from this window and compute event features. We consider two events belonging to two different classes and an event feature that changes with event-age. Figure~\ref{fig:Real_Feat_1} shows this event feature, which is the slope of a line fitted to the event signal values, and how it changes with event-age.}
+	\caption{Figure~\ref{fig:Real_1} shows data from a fibre optic cable. We extract events  from this window and compute event features. We consider two events belonging to two different classes and an event feature that changes with event-age.  Figure~\ref{fig:Real_Feat_1} shows this event feature, which is the slope of a line fitted to the event signal values, and how it changes with event-age.}
 	\label{fig:Real_World_Data}
 \end{figure}
 
+
 Fibre optic sensor cables are used in many applications including optical communications, detecting undersea cable faults \citep{jiang2009technological}, detecting oil leakages \citep{nikles2004leakage}, detecting intruders on secured premises \citep{griffiths1995developments}, monitoring health of infra-structure such as bridges and pipe-lines \citep{li2004recent}, to name a few. Events in these applications can often be grouped into two classes. For example, a cable lying on the sea bed can produce spatio-temporal events that are either cable faults (A), or non-fault events due to the activity in the ocean (B). Due to its sensitivity, fibre optic cables are also prone to noise. In a setting where early classification is important, we need to classify these events quickly, preferably while they are still ongoing.
 
-In the dataset in Figure~\ref{fig:Real_World_Data}, events are seen in the lighter-coloured parts. The event approximately at location 30 between the time interval 45 to 60 is of class A while other events that appear between locations 150 and 400 are of class B. Due to the commercially sensitive nature of the dataset, we refrain from giving details about the actual application.
+In the dataset in Figure~\ref{fig:Real_1}, events are seen in the lighter-coloured parts. The event approximately at location 30 between the time interval 45 to 60 is of class A while other events that appear between locations 150 and 400 are of class B.  Figure~\ref{fig:Real_Feat_1} shows an event  feature, which is the slope of a fitted line to the event signal values, computed on two events belonging to each class. As the event matures, we see this feature change with event-age. Due to the commercially sensitive nature of the dataset, we refrain from giving details about the actual application.
 
-We will investigate early classification of spatio-temporal events using the framework in Figure~\ref{fig:1}. The remainder of the paper is organised as follows. Section~\ref{sec:EventExtract} discusses event extraction and feature computation, while Section~\ref{sec:Notation} introduces the notation for classification of age-varying events. In Sections~\ref{sec:ExtendedClassifier} and~\ref{sec:CascadedDLM} we introduce the age-varying events classifier and the cascaded non-Gaussian state space models respectively. %In Section~\ref{sec:Experiments} we discuss the synthetic datasets, and the results of the two early detection methods.
-In Section~\ref{sec:Experiments} we discuss results of our framework using synthetic data and two real applications. The first application is associated with the dataset in Figure~\ref{fig:Real_World_Data} and the second application is on Nitrogen dioxide $(\text{NO}_2)$ data from NASA's NEO \cite{OMINO2} website. Finally, in Section~\ref{sec:Conclusions}, we present our conclusions and discuss future work.
+\subsection{Contributions}
+%We explore early event classification using two approaches that are based on different principles: 1) logistic regression; and 2) state-space models. These two approaches complement each other as logistic regression by itself is a static model more suited for stationary distributions, and a state space model coupled with a Kalman filter can update easily, which is advantageous for non-stationary data distributions. On the other hand, logistic regression may give better results than state space models for a stable data distribution.
+
+%Our proposed framework, depicted in Figure~\ref{fig:1}, can be used in applications that give rise to spatio-temporal events with contiguous spatial dimensions. Typically, pre-processing is also a common step done before event extraction. However we do not focus on pre-processing data as techniques differ depending on the application. As event extraction is needed before classification, we also propose a simple method for event extraction. We make this work available in the R package \textit{eventstream} \citep{eventstream}.
+
+
+
+
+
+We propose the framework depicted in Figure~\ref{fig:1_1} for early event classification in spatio-temporal data streams using the partial observation structure. Specifically, our contributions in this paper are:
+\begin{enumerate}
+    \item We introduce two algorithms for early event classification - a static algorithm suited for stable, stationary distributions and a dynamic algorithm for non-stationary data distributions. This is our main contribution.    
+    \begin{enumerate}
+        \item The static algorithm is based on multiple layers of base classifiers, which are bound together by penalty terms to work as a single classifier. This model works on partial observations and classifies developing events. In our implementation, we use logistic regression as the base classifier. However, other base classifiers can be used. We call this model Static Age-Varying Events Classifier (SAVEC). 
+        \item The dynamic algorithm is based on  a series of non-Gaussian state space models, which works on partial observations. Due to the functionality of the Kalman filter, the model can update easily, which is advantageous for non-stationary data distributions We call this model Dynamic Age-Varying Events Classifier (DAVEC).
+    \end{enumerate} 
+    \item We introduce a simple algorithm for event extraction from spatio-temporal data, as events need to be extracted before the classification process. 
+    \item We demonstrate the validity of these algorithms on synthetic and real world data.
+    \item We make the algorithms and data available in the R package {\it eventstream} \citep{eventstream}.
+\end{enumerate}
+
+The remainder of the paper is organised as follows. Section~\ref{sec:EventExtract} discusses the preliminaries. We introduce our event extraction algorithm and discuss the event features. % In addition  Section~\ref{sec:Notation} 
+We also introduce the notation for partial observations, which is essential for classifying age-varying events. In Sections~\ref{sec:ExtendedClassifier}  and~\ref{sec:CascadedDLM} we introduce the static and dynamic age-varying events classifiers, SAVEC and DAVEC respectively. We discuss the implementation of age-varying coefficients in SAVEC and DAVEC and how it gives a growing prediction on developing events. %In Section~\ref{sec:Experiments} we discuss the synthetic datasets, and the results of the two early detection methods.
+In Section~\ref{sec:Experiments} we discuss results of our framework using synthetic data and two real applications. The first application focuses on early event classification and is associated with the dataset in Figure~\ref{fig:Real_World_Data}. The second application demonstrates the relevance of our event extraction algorithm to   Nitrogen dioxide $(\text{NO}_2)$ data from NASA's NEO \citep{OMINO2} website. Finally, in Section~\ref{sec:Conclusions}, we present our conclusions and discuss future work.
 
 % =======================================================================
 % =======================================================================
@@ -169,7 +278,7 @@ In Section~\ref{sec:Experiments} we discuss results of our framework using synth
 
 \subsection{Event extraction}
 
-We extract events from data streams of 2 or 3 dimensions; i.e.\ 1 time dimension and either 1 or 2 spatial dimensions. We employ a simple method for event extraction using DBSCAN \citep{ester1996density}, which is a density based clustering algorithm. Our event extraction algorithm is explained in Algorithm~\ref{algo:events_extraction}.
+We extract events from data streams of 2 or 3 dimensions; i.e. 1 time dimension and either 1 or 2 spatial dimensions. We employ a simple method for event extraction using DBSCAN \citep{ester1996density}, which is a density based clustering algorithm. Our event extraction algorithm is explained in Algorithm~\ref{algo:events_extraction}.
 
 \DontPrintSemicolon
 \begin{algorithm}\fontsize{9}{10}\selectfont
@@ -181,7 +290,7 @@ We extract events from data streams of 2 or 3 dimensions; i.e.\ 1 time dimension
 	Let $q$ denote the $\alpha$-percentile of the signal values of $A$. \\
 	$S = \{ (i,j) \mid a_{ij} > q \}$ for 2-dimensional $A$ and
 	$S = \{ (i,j, k) \mid a_{ijk} > q \}$ for 3-dimensional $A$. \\
-	$ B = A|_S$, i.e.\ signal values of $A$ in $S$ locations. \\
+	$ B = A|_S$, i.e., signal values of $A$ in $S$ locations. \\
 	Using DBSCAN cluster B using $\epsilon$ and \textit{minPts}. \\
 	This clustering gives each $s \in A|_S$ a cluster id. \\
 	%Convert $A$ to a mesh-grid format $B$, i.e. $B$ contains 2D/3D grid coordinates and the value of each cell of $A$. \;
@@ -211,9 +320,9 @@ Figure~\ref{fig:blobs_A_B} shows a  synthetic dataset generated from the package
 
 \subsection{Features}\label{sec:Featurelist}
 
-As we work with a data stream, we use a moving window model in our experiments. We extract events from data in the current window and compute features for these events. The feature set comprises some basic features such as length and width of each event, and some other features that compute the intensity of each event relative to the background. The  ``Relative to the background'' features are equivalent to a family of signal to noise ratio features and are motivated from the fibre optic application (see Figure~\ref{fig:1}).
+As we work with a data stream, we use a moving window model in our experiments. We extract events from data in the current window and compute features for these events. The feature set comprises some basic features such as length and width of each event, and some other features that compute the intensity of each event relative to the background. The  ``Relative to the background'' features are equivalent to a family of signal to noise ratio features and are motivated from the fibre optic application (see Figure~\ref{fig:Real_1}).
 
-To compute the SNR family of features  we use smoothing splines and thus they are only computed for two-dimensional data streams due to ease of computation. Using a small portion from the beginning of each window, which correspond to the recent past, we compute the mean, median, IQR and standard deviation for each location. Using these values at each location, we compute four smoothing splines. The objective is to have the background mean, median, IQR and standard deviation pixel value for each location. The median and IQR splines from a small window in Figure~\ref{fig:Im_Splines} are shown in Figures~\ref{fig:Spline_Median} and~\ref{fig:Spline_IQR}. %This enables the computation of event strength or intensity relative to the background.
+To compute the SNR family of features  we use smoothing splines and thus they are only computed for two-dimensional data streams due to ease of computation.  Using a small portion from the beginning of each window, which correspond to the recent past, we compute the mean, median, IQR and standard deviation for each location. Using these values at each location, we compute four smoothing splines. The objective is to have the background mean, median, IQR and standard deviation pixel value for each location. The median and IQR splines from a small window in Figure~\ref{fig:Im_Splines} are shown in Figures~\ref{fig:Spline_Median} and~\ref{fig:Spline_IQR}. %This enables the computation of event strength or intensity relative to the background.
 
 \begin{figure}[!hb]
 	\centering
@@ -261,19 +370,20 @@ For two-dimensional events we compute the following features:
 	      Similar to the previous feature, our $x$ is the 80th percentile of the event signal value. Here we compute the number of local standard deviations for which $x$ is greater than the local mean.
 \end{compactenum}
 
-For three-dimensional data streams we compute a subset of the above features. In particular, we compute features 1--8 from the above list and an equivalent of feature 14 using the global standard deviation and the global mean. These features now provide a compact way to represent a data stream and the embedded events, summarising salient properties of the time window in terms of event signal strength and shape. This summary becomes input to a classifier to identify types of events.
+For three-dimensional data streams we compute a subset of the above features. In particular, we compute features 1--8 from the above list and an equivalent of feature 14 using the global standard deviation and the global mean.  These features now provide a compact way to represent a data stream and the embedded events, summarising salient properties of the time window in terms of event signal strength and shape. This summary becomes input to a classifier to identify types of events.
+
 
 \subsection{Partial/incomplete observations} \label{sec:Notation}
 
 In the classical setting, a classification problem comprises observations $(\bm{x}_i, y_i)$ for $i \in 1,\dots, N$ where $\bm{x}_i \in \mathbb{R}^b$ is the attribute vector of the $i$th observation and $y_i$ is its class label. The task of the classifier is to learn the class boundary by using the given set of observations. Then for any new observation $\bm{x}_j$, the classifier can predict its class label using the learned class boundaries. Let us call this a \textbf{standard classifier}.
 
-Standard classifiers have been widely popular in diverse fields of study and practice. However, they are not without limitations. One of the limitations is that once a classifier is trained, it has fixed class boundaries. If the new data is different from the data learned by the classifier, the output of the classifier is of little use. This is particularly the case in data-streaming scenarios, where data distributions are non-stationary (sometimes also referred to as concept drift). It is necessary for a classifier to re-adjust its class boundaries when faced with non-stationarity. The literature on adapting or evolving classifiers is significant \citep{duchi2011adaptive, dabbagh2005online, frey1991letter, giacinto1997adaptive, nishida2005ace,alippi2008just, alippi2008just2}. Let us call these classifiers \textbf{evolving classifiers}.
+Standard classifiers have been widely popular in diverse fields of study and practice. However, they are not without limitations. One of the limitations is that once a classifier is trained, it has fixed class boundaries. If the new data is different from the data learned by the classifier, the output of the classifier is of little use. This is particularly the case in data-streaming scenarios, where data distributions are non-stationary (sometimes also referred to as concept drift). It is necessary for a classifier to re-adjust its class boundaries when faced with non-stationarity. The literature on adapting or evolving classifiers is significant \citep{duchi2011adaptive,  frey1991letter,  nishida2005ace,alippi2008just, alippi2008just2}. Let us call these classifiers \textbf{evolving classifiers}.
 
-Now, consider the case when a new observation is not made available at once but gradually, where we get partial information about the new observation and the amount of partial information increases with time. This is the case for events described in Section~\ref{sec:EventExtract}. Let $\bm{x}_j$ be a new observation which becomes available partially via the following finite sequence of partial observations $\{\bm{p}^j_{t_1},\bm{p}^j_{t_2}, \bm{p}^j_{t_3}, \dots, \bm{p}^j_{t_n}\}$. Here the partial observation of $\bm{x}_j$ at age $t_k$ is denoted by $\bm{p}^j_{t_k}$ and $\bm{p}^j_{t_n} = \bm{x}_j$ with $t_1 < t_2 < \dots < t_n$. We differentiate between the time and the age of a partial observation. A partial observation that begins at time $t =t_1$ has age $0$ at time $t_1$, and at time $t = t_2$ it has age $t_2 - t_1$.
+Now, consider the case when a new observation is not made available at once but gradually, where we get partial information about the new observation and the amount of partial information increases with time. This is the case for events described in Section~\ref{subsec:RealWorld}. Let $\bm{x}_j$ be a new observation which becomes available partially via the following finite sequence of partial observations $\{\bm{p}^j_{t_1},\bm{p}^j_{t_2}, \bm{p}^j_{t_3}, \dots, \bm{p}^j_{t_n}\}$. Here the partial observation of $\bm{x}_j$ at age $t_k$ is denoted by $\bm{p}^j_{t_k}$ and $\bm{p}^j_{t_n} = \bm{x}_j$ with $t_1 < t_2 < \dots < t_n$. We differentiate between the time and the age of a partial observation. A partial observation that begins at time $t =t_1$ has age $0$ at time $t_1$, and at time $t = t_2$ it has age $t_2 - t_1$.
 
 We consider the question ``how can we classify partial observations?'' If one trains a single standard classifier on all partial observations, it may be optimal for a certain set of partial observations $p_{t_k}$ at a given age $t_k$, but not all partial observations, because partial observations change with time. If one waits until the partial observation has formed into a full observation $\bm{x}_j$, then a standard classifier can be used. However, for some applications such as intrusion detection it might be too late to wait until the full observation has formed. One option is to have a series of standard classifiers $\{C_{t_i}\}_{i=1}^n$ each trained on partial observations $p_{t_i}$. When a new observation gradually arrives in the form of a sequence of partial observations $\{\bm{p}^k_{t_1},\bm{p}^k_{t_2}, \bm{p}^k_{t_3}, \dots, \bm{p}^k_{t_n}\}$, the classifier $C_{t_i}$ can be used on $\bm{p}^k_{t_i}$. Thus, as the partial observation grows, we have a growing prediction $\{y_{t_1}, y_{t_2}, \dots, y_{t_n}\}$ of the class label. More importantly, we do not need to wait until the partial observation matures to a full observation before making a prediction.
 
-However, having a series of classifiers independent of each other is sub-optimal because each classifier is only trained on a portion of the data, i.e.\ it is trained on  individual snapshots of events at different ages. By linking event snapshots of different event-ages in an appropriate way,  better predictions can be achieved. The age-varying events classifier described in the next section addresses this limitation, while giving a growing prediction.
+However, having a series of classifiers independent of each other is sub-optimal because each classifier is only trained on a portion of the data, i.e. it is trained on  individual snapshots of events at different ages. By linking event snapshots of different event-ages in an appropriate way,  better predictions can be achieved.  The classifiers SAVEC and DAVEC described in the next sections address this limitation, while giving a growing prediction.
 
 %Here we note that one does not need to have $t_n$ number of classifiers, but can do with a fewer number of classifiers such that for partial observations with age $t_1 \leq t \leq t_i$ classifier $C_1$ is used, and for partial observations with age $t_i \leq t \leq t_j$ classifier $C_2$ is used and so on. Here $t_1 < t_i < t_j $.
 
@@ -281,11 +391,11 @@ However, having a series of classifiers independent of each other is sub-optimal
 
 % =======================================================================
 % =======================================================================
-\section{Age-varying events classifier}\label{sec:ExtendedClassifier}
+\section{SAVEC: Static Age-Varying Events Classifier }\label{sec:ExtendedClassifier}
 % =======================================================================
 
 %Another option is to extend a standard classifier in time in the following manner.
-Let the standard classifier minimize the loss function given by $\mathscr{L}$, i.e.\
+Let the standard classifier minimize the loss function given by $\mathscr{L}$, i.e.
 $$
   \argmin_\beta \frac{1}{N}\sum_{i=1}^N \mathscr{L}(\bm{x}_i,y_i;\beta) \, ,
 $$
@@ -310,28 +420,32 @@ In addition $\{\bm{p}^i_{t_j}\}_{i=1}^N$ for a fixed age $t_j$ only affects $\ti
 %$$ \sum_{j=1}^n \left( \argmin_{\tilde{\beta}_j} \sum_{i=1}^N \mathscr{L} \left( \bm{p}^i_{t_j},y_i;\tilde{\beta}_j \right) \right) $$
 From equations \eqref{eq:4_1} and \eqref{eq:4_2} we see that the initial extended classifier $\mathscr{E}$ is equivalent to a series of $n$ classifiers $\{C_{t_j}\}_{j=1}^n $.
 
-Having $n$ independent classifiers $\left\{C_{t_j}\right\}_{j=1}^n$ will make the class boundaries for each classifier independent of each other. As $\bm{x}_i \in \mathbb{R}^b$, the class boundary of $C_{t_j}$ lives in the ambient space $\mathbb{R}^{b}$. Let us denote the class boundary of $C_{t_j}$ by $B_j$ and the class boundary of $\mathscr{E}$ by $B_{\mathscr{E}}$. As $n$ independent classifiers $\left \{C_{t_j} \right \}_{j=1}^n$ in totality are equivalent to $\mathscr{E}$, it follows that the class boundary $B_{\mathscr{E}}$ comprises the set $\left\{ B_j \right\}_{j=1}^n $. By stacking $B_j$ in the order of increasing $j$, i.e.\ by considering the set $\left \{ \left(t_j, B_j \right) \right \}_{j=1}^n $, we can visualize a continuous class boundary that connects the set $\left\{ B_j \right\}_{j=1}^n$ with increasing $t_j$. This continuous class boundary lives in $\mathbb{R}^{b+1}$. Thus, the set $\left \{ \left(t_j, B_j \right) \right \}_{j=1}^n$ can be viewed as a discrete approximation of a continuous class boundary. Therefore, $B_{\mathscr{E}}$ can be viewed as living in $\mathbb{R}^{b+1}$.
+Having $n$ independent classifiers $\left\{C_{t_j}\right\}_{j=1}^n$ will make the class boundaries for each classifier independent of each other. As $\bm{x}_i \in \mathbb{R}^b$, the class boundary of $C_{t_j}$ lives in the ambient space $\mathbb{R}^{b}$. Let us denote the class boundary of $C_{t_j}$ by $B_j$ and the class boundary of $\mathscr{E}$ by $B_{\mathscr{E}}$. As $n$ independent classifiers $\left \{C_{t_j} \right \}_{j=1}^n$ in totality are equivalent to $\mathscr{E}$, it follows that the class boundary $B_{\mathscr{E}}$ comprises the set $\left\{ B_j \right\}_{j=1}^n $. By stacking $B_j$ in the order of increasing $j$, i.e. by considering the set $\left \{ \left(t_j, B_j \right) \right \}_{j=1}^n $, we can visualize a continuous class boundary that connects the set $\left\{ B_j \right\}_{j=1}^n$ with increasing $t_j$. This continuous class boundary lives in $\mathbb{R}^{b+1}$. Thus, the set $\left \{ \left(t_j, B_j \right) \right \}_{j=1}^n$ can be viewed as a discrete approximation of a continuous class boundary. Therefore, $B_{\mathscr{E}}$ can be viewed as living in $\mathbb{R}^{b+1}$.
 
 In addition, it is desirable if $B_{\mathscr{E}}$ has a certain level of smoothness, because it aids convergence of early classification based on partial observations to  full classification based on full observations. To incorporate smoothness in $B_{\mathscr{E}}$, we modify the original loss function by including an $L_2$ penalty term as follows:
 \begin{equation}\label{eq:ExtParCl_1}
 	\varphi\left(\tilde{\beta}, \lambda \right) = \frac{1}{nN} \sum_{i=1}^N \sum_{j=1}^n \mathscr{L} \left( \bm{p}^i_{t_j},y_i;\tilde{\beta} \right) + \lambda \sum_{k=1}^l\sum_{j=1}^{n-1} \left(\tilde{\beta}_{j+1,k} - \tilde{\beta}_{j,k} \right)^2 \, ,
 \end{equation}
-for some $\lambda >0 $. The constant $\lambda$ is a parameter that can be specified. Recall that $\tilde{\beta}_j = \left( \tilde{\beta}_{j1}, \tilde{\beta}_{j2}, \dots, \tilde{\beta}_{jl} \right)$ relates to partial observations $\{ \bm{p}^i_{t_j}\}_{i=1}^N$ for a fixed $t_j$, i.e.\ $\tilde{\beta}_{j1}$ is the coefficient of the first covariate at age $t_j$ and $\tilde{\beta}_{j2}$ the coefficient of the second covariate at age $t_j$. Thus the penalty term $(\tilde{\beta}_{j+1,k} - \tilde{\beta}_{j,k})^2$ takes coefficients for the $k$th covariate at ages $t_j$ and $t_{j+1}$ and penalizes the difference, enforcing a certain smoothness in event-age. We minimize the loss function described by equation \eqref{eq:ExtParCl_1} in our proposed classifier. As we use this classifier on premature events, we call this the \textit{age-varying events classifier}.
+for some $\lambda >0 $. The constant $\lambda$ is a parameter that can be specified. Recall that $\tilde{\beta}_j = \left( \tilde{\beta}_{j1}, \tilde{\beta}_{j2}, \dots, \tilde{\beta}_{jl} \right)$ relates to partial observations $\{ \bm{p}^i_{t_j}\}_{i=1}^N$ for a fixed $t_j$, i.e. $\tilde{\beta}_{j1}$ is the coefficient of the first covariate at age $t_j$ and $\tilde{\beta}_{j2}$ the coefficient of the second covariate at age $t_j$. Thus the penalty term $(\tilde{\beta}_{j+1,k} - \tilde{\beta}_{j,k})^2$ takes coefficients for the $k$th covariate at ages $t_j$ and $t_{j+1}$ and penalizes the difference, enforcing a certain smoothness in event-age. This is the loss function minimized by SAVEC (\textit{static age-varying events classifier}). Thus SAVEC finds $\tilde{\beta}$ such that,
+
+%We minimize the loss function described by equation \eqref{eq:ExtParCl_1} in our proposed classifier. This is our \textit{Static Age-Varying Events Classifier} (SAVEC).  
+%As we use this classifier on premature events, we call this the \textit{static age-varying events classifier}.
 \begin{equation}\label{eq:ExtParCl_2}
 	\argmin_{\tilde{\beta}} \varphi\left(\tilde{\beta}, \lambda \right) = 	\argmin_{\tilde{\beta}} \left( \frac{1}{nN} \sum_{i=1}^N \sum_{j=1}^n \mathscr{L} ( \bm{p}^i_{t_j},y_i;\tilde{\beta} ) + \lambda \sum_{k=1}^l\sum_{j=1}^{n-1} (\tilde{\beta}_{j+1,k} - \tilde{\beta}_{j,k} )^2 \right) \, .
 \end{equation}
 
-This is a general formulation for an age-varying events classifier, i.e.\ any loss function $\mathscr{L}$ can be used in equation \eqref{eq:ExtParCl_2}. Without loss of generality, we implement the age-varying events classifier for logistic regression in our R package \textit{eventstream}. For logistic regression \citep{friedman2001elements} the loss function $\mathscr{L}$ is given by
+% This is a general formulation for an age-varying events classifier
+As any loss function $\mathscr{L}$ can be used in equation \eqref{eq:ExtParCl_2}, SAVEC is a general formulation. Our implementation of SAVEC in \textit{eventstream} \citep{eventstream} uses logistic regression as the base classifier and the associated loss function. However, SAVEC can be implemented with any loss function. For logistic regression \citep{friedman2001elements} the loss function $\mathscr{L}$ is given by
 \begin{equation}\label{eq:LogReg}
 	\mathscr{L} (\bm{p}^i_{t_j},y_i;\tilde{\beta}) = - y_i \left( [ 1 \,\, ( \bm{p}^i_{t_j})^T] \tilde{\beta}_{j} \right) + \log \left( 1+ \exp\big\{[ 1 \, \,( \bm{p}^i_{t_j})^T ] \tilde{\beta}_{j}\big\} \right) \, .
 \end{equation}
 Here the vector $[1 \,\, ( \bm{p}^i_{t_j})^T]$ denotes the concatenation of the vector $\bm{p}^i_{t_j}$ with the constant $1$ to account for the intercept. %We refer to our age-varying events classifier for logistic regression by $\mathscr{P}$ in the following sections.
 
-Next we explore a non-Gaussian state space model for partial observations.
+Next we explore non-Gaussian state space models for partial observations.
 
 % =======================================================================
 % =======================================================================
-\section{Cascaded non-Gaussian state space models}\label{sec:CascadedDLM}
+\section{DAVEC: Dynamic Age-Varying Events Classifier }\label{sec:CascadedDLM}
 % =======================================================================
 
 We use non-Gaussian state space models as described in \citep{durbin1998time} and \citep{mccormick2012dynamic} to model partial observations, and the implementation in  R package \textit{dma} \citep{dma}. We start with the linear Gaussian state space models which are given by the following equations :
@@ -340,7 +454,7 @@ We use non-Gaussian state space models as described in \citep{durbin1998time} an
 	\alpha_{t+1} & = T_t \alpha_t + R_t \eta_t \, , \label{eq:DLM_2}
 \end{align}
 where $\varepsilon_t \in \mathcal{N} \left(0, H_t\right)$ and $\eta_t \in \mathcal{N} \left(0, Q_t\right)$. %and $\alpha_1 \in \left(0, Q_t\right)$.
-Here $y_t$ is an $N$-dimensional vector of observations and $\alpha_t$ is a $(l+1)$-dimensional state vector. The matrices $Z_t$, $T_t$, $R_t$, $H_t$ and $Q_t$ are known at the beginning. Equation \eqref{eq:DLM_1} is called the ``observation equation'' and equation \eqref{eq:DLM_2}  the ``state equation''. When using state space models for dynamic regression, $\alpha_t$ denotes the coefficients which update dynamically.
+Here $y_t$ is an $N$-dimensional vector of observations and $\alpha_t$ is a $(l+1)$-dimensional state vector. The matrices $Z_t$, $T_t$, $R_t$, $H_t$ and $Q_t$ are known at the beginning.  Equation \eqref{eq:DLM_1} is called the ``observation equation'' and equation \eqref{eq:DLM_2}  the ``state equation''. When using state space models for dynamic regression, $\alpha_t$ denotes the coefficients which update dynamically.
 
 %If the observations $y_t$ come from an exponential family distribution, the equations change as follows:
 %\begin{align}
@@ -358,7 +472,7 @@ equation \eqref{eq:DLM_1} changes as
 \end{equation}
 with logit function $f(t)=\log(t/(1-t))$, while keeping equation \eqref{eq:DLM_2} unchanged.
 
-\subsection{Modelling partial observations}
+\subsection{Modelling partial observations with DAVEC}
 
 We are interested in a growing prediction $\{\theta^j_{t_1}, \theta^j_{t_2}, \dots, \theta^j_{t_n} \}$ for partial observations $\{\bm{p}^j_{t_1},\bm{p}^j_{t_2}, \bm{p}^j_{t_3}, \ldots \bm{p}^j_{t_n}\}$ belonging to the same complete observation. Again, we note that for partial observations $\{\bm{p}^j_{t_1},\bm{p}^j_{t_2}, \bm{p}^j_{t_3}, \ldots \bm{p}^j_{t_n}\}$, the time stamps $(t_1, t_2, \ldots, t_n)$ denote the ages of the partial observations, not the time of occurrence. % As such, we want the prediction $\theta^j_{t_k}$ to be more confident as the age ${t_k}$ grows. This is what we mean by a growing prediction$\left\{ \theta^j_{t_1}, \theta^j_{t_2}, \dots, \theta^j_{t_n} \right\}$ .
 
@@ -384,33 +498,35 @@ Building in this way we obtain
 	Z_{t_k}      & = [ \bm{1} \, \, \bm{P}_{t_k} \, \, \theta_{k_{t-1}}] \, , \label{eq:OurMod5} \\
 	\theta_{t_k} & = Z_{t_k} \alpha_{t_k} \, . \label{eq:OurMod6}
 \end{align}
-The equations \eqref{eq:OurMod5}, \eqref{eq:OurMod6} and \eqref{eq:DLM_2} describe the model for the partial observations at age $t_k$. Let us denote the model which describes the partial observations of age $t_k$ by $\Lambda_k$ and the predicted output using the inverse link function by $\hat{\bm{y}}_{t_k}$. Then Figure~\ref{fig:PODLM} gives the structure of our partial observations model.
+The equations \eqref{eq:OurMod5}, \eqref{eq:OurMod6} and \eqref{eq:DLM_2} describe the model for the partial observations at age $t_k$. Let us denote the model which describes the partial observations of age $t_k$ by $\Lambda_k$ and the predicted output using the inverse link function by $\hat{\bm{y}}_{t_k}$. Our Dynamic Age-Varying Events Classifier (DAVEC) incorporates a series of sub-models $\{ \Lambda_k\}_{k=1}^n$ in its implementation.  Figure~\ref{fig:PODLM} shows DAVEC with internal communications between sub-models $\Lambda_{k}$ and $\Lambda_{k+1}$. 
+%Then  gives the structure of DAVEC (\textit{Dynamic Age-Varying Events Classifier}).
 
 \begin{figure}[!hb]
 	\centering
 	\includegraphics[clip=true,scale=0.8]{./Graphics/Lots_of_circles_3.pdf}
-	\caption{Structure of the partial observations model with communication.}
+	\caption{Structure of DAVEC with communication.}
 	\label{fig:PODLM}
 \end{figure}
 
-However, communication between models $\Lambda_{k-1}$ and $\Lambda_k$ may not improve the overall accuracy for every partial observations problem. For example, for a class imbalanced problem, a small number of incorrect predictions in $\theta_{t_{k-1}}$ can have an adverse effect on the model $\Lambda_k$. Therefore, for some instances such as class imbalanced datasets, it is desirable to have models $\Lambda_k$ without communication between the models, as shown in Figure~\ref{fig:PODLM2}.
+However, communication between models $\Lambda_{k}$ and $\Lambda_{k+1}$ may not improve the overall accuracy for every partial observations problem. For example, for a class imbalanced problem, a small number of incorrect predictions in $\theta_{t_{k}}$ can have an adverse effect on the model $\Lambda_{k+1}$. Therefore, for some instances such as class imbalanced datasets, it is desirable for DAVEC  to have no communications between the sub-models $\Lambda_k$ and $\Lambda_{k+1}$ as shown in Figure~\ref{fig:PODLM2}.
 
 \begin{figure}[!hb]
 	\centering
 	\includegraphics[clip=true,scale=0.8]{./Graphics/Lots_of_circles_4.pdf}
-	\caption{Structure of the partial observations model without communication.}
+	\caption{Structure of DAVEC without communication.}
 	\label{fig:PODLM2}
 \end{figure}
+
 
 % =======================================================================
 \section{Applications}\label{sec:Experiments}
 % =======================================================================
 
-We use age-varying events classifiers and cascaded state space models to classify events in synthetic and real data streams. The R code applicable to this section is available in the supplementary material.
+We use SAVEC and DAVEC to classify events in synthetic and real data streams. The R code applicable to this section is available in the supplementary material.
 
 \subsection{Synthetic data}\label{subsec:Synthetic}
 
-The synthetic data used in this section can be generated from the R package \textit{eventstream}. The synthetic data contains events of two classes: A and B. All events belonging to class A look similar, that is they have one single non-standard shape or visual pattern. In contrast, events belonging to class B can have one of three different non-standard shapes, including the shape of events of class A. The use of three different shapes for class B events and one shape for class A events (with that shape being similar to some of those of class B) was motivated from the real application.
+The synthetic data used in this section can be generated using the R package \textit{eventstream}. The synthetic data contains events of two classes: A and B. All events belonging to class A look similar, that is they have one single non-standard shape or visual pattern. In contrast, events belonging to class B can have one of three different non-standard shapes, including the shape of events of class A. The use of three different shapes for class B events and one shape for class A events (with that shape being similar to some of those of class B) was motivated from the fibre optic application.
 
 Figure~\ref{fig:Class_A} contains two events of class A, and Figure~\ref{fig:Class_B} contains 3 events of class B. The shapes are labelled as $1$, $2$ or $3$ in both Figures~\ref{fig:Class_A} and~\ref{fig:Class_B}, with shape $1$ being the common shape.
 
@@ -452,7 +568,7 @@ The number of events of class A and B, and their positions, are randomly generat
 	 \caption{Differences in class A and class B events.}\label{tab:DiffClassAandB}
 \end{table}
 
-We classify the extracted events from synthetic data using: 1) the age-varying events classifier; 2) cascaded state space models; and 3) logistic regression. We use the same feature vector to summarise the extracted events. Figure~\ref{fig:TwoWindows} shows snapshots of the data and the extracted events for two time windows.
+We classify the extracted events from synthetic data using SAVEC and DAVEC. As a benchmark comparison we use logistic regression. We use the same feature vector to summarise the extracted events for all three classifiers. Figure~\ref{fig:TwoWindows} shows snapshots of the data and the extracted events for two time windows.
 
 \begin{figure}
 	\centering
@@ -468,6 +584,7 @@ We classify the extracted events from synthetic data using: 1) the age-varying e
 	\label{fig:TwoWindows}
 \end{figure}
 
+
 \begin{figure}[!htb]
 	\centering
 	\subfloat[][]{
@@ -482,9 +599,9 @@ We classify the extracted events from synthetic data using: 1) the age-varying e
 	\label{fig:3Classifiers}
 \end{figure}
 
-We repeat each experiment $5$ times with data streams generated with different seeds. For each experiment we generate a data stream of dimension $3500 \times 250$ of which $80\%$ $(2800 \times 250)$ is used for training and the remaining $20\%$ for testing. For synthetic data classification, we do not use features which were motivated from the real example, i.e.\ we do not use features 11 and 12 from the list in Section~\ref{sec:Featurelist}, for computational efficiency. In addition, the centroid is not used in any classification task. As class A events can have a maximum age of $30$, we use $4$ event ages for the classification tasks at $t = 8, 16, 24$ and $32$ time units. That is, event features are calculated at these ages. We use a moving window model of dimension $200 \times 250$ which moves by a step of $8 \times 250$.
+We repeat each experiment $5$ times with data streams generated with different seeds. For each experiment we generate a data stream of dimension $3500 \times 250$ of which $80\%$ $(2800 \times 250)$ is used for training and the remaining $20\%$ for testing. For synthetic data classification, we do not use features which were motivated from the real example, i.e. we do not use features 11 and 12 from the list in Section~\ref{sec:Featurelist}, for computational efficiency. In addition, the centroid is not used in any classification task. As class A events can have a maximum age of $30$, we use $4$ event ages for the classification tasks at $t = 8, 16, 24$ and $32$ time units. That is, event features are calculated at these ages. We use a moving window model of dimension $200 \times 250$ which moves by a step of $8 \times 250$.
 
-Figure~\ref{fig:3Classifiers} shows the accuracy of the age-varying events classifier, state space model and logistic regression classifier over 5 repetitions. From Figure~\ref{fig:Facet2} we see that for each repetition either the age-varying events classifier or the state space model surpasses the logistic regression classifier. From Figure~\ref{fig:Facet1} we see that the age-varying events classifier performs better on average than the other two classifiers for synthetic data. Table~\ref{tab:Results_Synthetic} gives the average test set accuracy and standard deviation results for the 3 classifiers, which confirm these observations. Also we see that all 3 classifiers improve their average accuracy levels with the age of the events.
+Figure~\ref{fig:3Classifiers} shows the accuracy of  SAVEC, DAVEC and the logistic regression classifier over 5 repetitions.  From Figure~\ref{fig:Facet2} we see that for each repetition either SAVEC or DAVEC surpasses the logistic regression classifier. From Figure~\ref{fig:Facet1} we see that the SAVEC performs better on average than the other two classifiers for synthetic data. Table~\ref{tab:Results_Synthetic} gives the average test set accuracy and standard deviation results for the 3 classifiers, which confirm these observations. Also we see that all 3 classifiers improve their average accuracy levels with the age of the events.
 
 \begin{table}[!ht]
   \centering
@@ -494,8 +611,8 @@ Figure~\ref{fig:3Classifiers} shows the accuracy of the age-varying events class
     \cmidrule{2-5} \cmidrule{7-10}
                                  & $t_1$ & $t_2$ & $t_3$ & $t_4$   & & $t_1$ & $t_2$ & $t_3$ & $t_4$\\
     \midrule
-    Age-varying events classifier & 80    & 89    & 93    & 91  &  & 9  & 7  &  7  & 6 \\
-    Cascaded state space models  & 87    & 89    & 89    & 89   & & 5  & 4  &  3  & 2\\
+    SAVEC & 80    & 89    & 93    & 91  &  & 9  & 7  &  7  & 6 \\
+    DAVEC  & 87    & 89    & 89    & 89   & & 5  & 4  &  3  & 2\\
     Logistic regression          & 75    & 79    & 79    & 79   & & 12  & 10 & 10 & 9 \\
     \bottomrule
   \end{tabular}
@@ -510,7 +627,7 @@ Figure~\ref{fig:3Classifiers} shows the accuracy of the age-varying events class
 
 \subsection{Fibre optic cable data}\label{sec:FibreOpticExperiment}
 
-The data for the first real application is from a fibre optic cable, and is shown in Figure~\ref{fig:Real_World_Data_Stream}. The data set is available in the R package \textit{eventstream}. Again, for commercially sensitive reasons, we cannot provide more information about the application. The data set has dimensions $379 \times 587$, with class A events labelled with letter \textbf{A}. The extracted events have a maximum age of 40 time units, so we use a window model with a window size $40 \times 587$ and a step size $10 \times 587$ to extract events and compute features.
+The data for the first real application is from a fibre optic cable, and is shown in Figure~\ref{fig:Real_World_Data_Stream}.  The data set is available in the R package \textit{eventstream}. Again, for commercially sensitive reasons, we cannot provide more information about the application. The data set has dimensions $379 \times 587$, with class A events labelled with letter \textbf{A}. The extracted events have a maximum age of 40 time units, so we use a window model with a window size $40 \times 587$ and a step size $10 \times 587$ to extract events and compute features.
 
 \begin{figure}[!b]
 	\centering
@@ -519,9 +636,9 @@ The data for the first real application is from a fibre optic cable, and is show
 	\label{fig:Real_World_Data_Stream}
 \end{figure}
 
-Similar to the synthetic data stream, we classify the extracted event features using 3 classifiers. The main difference is that the real data stream has a much smaller number of class A events compared to class B events. Due to this class imbalance, we configure the state space models for real data differently from those used for the synthetic data. First, we use the state space models structure depicted in Figure~\ref{fig:PODLM2}. Second, as there are only $4$ class A events, there is not enough class A data to update the state space models regularly. Consequently, we use the state space models for training and prediction without the updating step given in equation \eqref{eq:DLM_2}.
+Similar to the synthetic data stream, we classify the extracted events using SAVEC and DAVEC.  Again as a benchmark we use logistic regression. The main difference compared to the synthetic data is that the real data stream has a much smaller number of class A events compared to class B events. Due to this class imbalance, we configure DAVEC for real data differently from the synthetic data model. First, we use DAVEC  without internal communications, as depicted in Figure~\ref{fig:PODLM2}. Second, as there are only $4$ class A events, there is not enough class A data to update DAVEC regularly. Consequently, we use  DAVEC for training and prediction without the updating step given in equation \eqref{eq:DLM_2}.
 
-We use $4$-fold cross validation because there are 4 class A events, with event ages $t = 10, 20, 30$ and $40$, because the maximum event-age is $40$ time units. The age-varying events, logistic regression and the state space models classifiers are trained on a data stream comprising 3 training folds, and tested on the remaining fold.
+We use $4$-fold cross validation because there are 4 class A events, with event ages $t = 10, 20, 30$ and $40$, because the maximum event-age is $40$ time units. Each classifier, SAVEC, DAVEC and logistic regression is trained on a data stream comprising 3 training folds, and tested on the remaining fold. %The age-varying events, logistic regression and the state space models classifiers are trained on a data stream comprising 3 training folds, and tested on the remaining fold.
 
 We report additional accuracy measures that are designed for imbalanced datasets. These metrics are positive predictive value (PPV), negative predictive value (NPV) and area under the receiver operator characteristic curve (AUC). We give the definitions of these metrics below:
 $$
@@ -534,7 +651,8 @@ The number of predicted positives in PPV is the sum of true positives and false 
 
 In contrast, the area under the receiver operator characteristic (ROC) curve is a single measure that captures the effectiveness of a classifier. The ROC curve is a plot of the true positive rate against the false positive rate for different classification thresholds. The area under the curve (AUC) provides a measure of discrimination between positive and negative classes. The AUC can be interpreted as the probability that a positive observation is ranked higher than a negative observation. The AUC does not depend on the classification threshold as it is an aggregate measure. An AUC closer to 1 is reflective of a good model, while a random predictor will give an AUC closer to 0.5.
 
-%The graphs in Figures~\ref{fig:RealPPV},~\ref{fig:RealNPV} and~\ref{fig:RealROC} give the PPV, NPV and AUC values of the 3 classifiers grouped by classifier and fold.
+%The graphs in Figures~\ref{fig:RealPPV},~\ref{fig:RealNPV} and~\ref{fig:RealROC} give the PPV, NPV and AUC values of the 3 classifiers grouped by classifier and fold. 
+
 
 % PPV - dev events 0.964285714	1	1	0.964285714
 % PPV - dma 0.683333333	0.816071429	0.85625	0.6375
@@ -604,26 +722,28 @@ In contrast, the area under the receiver operator characteristic (ROC) curve is 
 		\cmidrule{3-6} \cmidrule{8-11}
 		& & $t_1$ &  $t_2$ &  $t_3$ &  $t_4$   & &   $t_1$ &  $t_2$ &  $t_3$ &  $t_4$ \\
 		\midrule
-		PPV              & Age-varying events classifier & 95    & 95   & 100  & 95   & & 8 & 8 & 0 & 8    \\
-		                 & Cascaded state space models  & 74     & 69   & 68   & 68   & & 18 & 15 & 12& 23   \\
+		PPV              & SAVEC  & 95    & 95   & 100  & 95   & & 8 & 8 & 0 & 8    \\
+		                 & DAVEC  & 74     & 69   & 68   & 68   & & 18 & 15 & 12& 23   \\
 		                 & Logistic regression          & 91     & 75   & 75   & 70   & & 16 & 31 & 31 & 34     \\
 		\hline
-		NPV              & Age-varying events classifier & 91    & 92   & 93   & 92    & & 6 & 3 & 4 & 5   \\
-		                 & Cascaded state space models  & 98     & 100  & 99   & 100   & & 2 & 0 & 1 & 0   \\
-		                 & Logistic regression          & 95     & 95   & 95   & 92    & & 1 & 1 & 3 & 5 \\
+		NPV              & SAVEC & 91    & 92   & 93   & 92    & & 6 & 3 & 4 & 5   \\
+		                 & DAVEC  & 98     & 100  & 99   & 100   & & 2 & 0 & 1 & 0   \\
+		                 & Logistic regression          & 95     & 95   & 95   & 92    & & 1 & 1 & 3 & 5 \\  
 		\hline
-		AUC              & Age-varying events classifier & 93    & 94   & 96   & 94   & & 5 & 5 & 2 & 5    \\
-		                 & Cascaded state space models  & 94     & 97   & 94   & 97   & & 7 & 0 & 5& 1    \\
+		AUC              & SAVEC & 93    & 94   & 96   & 94   & & 5 & 5 & 2 & 5    \\
+		                 & DAVEC  & 94     & 97   & 94   & 97   & & 7 & 0 & 5& 1    \\
 		                 & Logistic regression          & 93     & 85   & 85   & 81   & & 7 & 15 & 15 & 14     \\
 		\bottomrule
 	\end{tabular}
 	 \caption{Mean and standard deviation of PPV, NPV and AUC $(\%)$ over $4$ folds.}\label{tab:AverageAccuracyReal}
 \end{table}
-Table~\ref{tab:AverageAccuracyReal} gives the average PPV, NPV and AUC values with their standard deviations over the $4$-folds for the fibre-optic data stream. For PPV and NPV, we use a probability threshold of $0.5$, i.e.\ if the output probability is greater than 0.5, it is deemed class A, and class B otherwise. From Table~\ref{tab:AverageAccuracyReal}, we see that the age-varying events classifier has the highest average PPV and the cascaded state space models have the highest average NPV for all event ages. Of the two classifiers, state space models are more conservative in predicting class A events compared with the age-varying events classifier. That is, if the state space models predict an event as belonging to class A, it is more likely that the actual event is of class A compared with the age-varying classifier. This is supported by the high mean NPV values and the associated low standard deviations of the state space models. On the other hand, the age-varying events classifier is much more likely to catch all class A events compared with the state space models as seen by the higher PPV values. Whether it is better to be conservative and miss some class A events while being relatively accurate in terms of the predicted class A events, or to identify all class A events while giving some false positives, depends on the application. Often the cost of  false positives and false negatives are not the same; for example consider a medical test for cancer. Thus, we see that our proposed two models have different strengths. In addition, both these models outperform the logistic regression classifier as seen by the AUC values.
+Table~\ref{tab:AverageAccuracyReal} gives the average PPV, NPV and AUC values with their standard deviations over the $4$-folds for the fibre-optic data stream. For PPV and NPV, we use a probability threshold of $0.5$, i.e. if the output probability is greater than 0.5, it is deemed class A, and class B otherwise. %From Table~\ref{tab:AverageAccuracyReal}, we see that SAVEC has the highest average PPV and DAVEC has the highest average NPV for all event ages. Of the two classifiers, DAVEC is more conservative in predicting class A events compared with the SAVEC. That is, if DAVEC predicts an event as belonging to class A, it is more likely that the actual event is of class A compared with SAVEC. This is supported by the high mean NPV values and the associated low standard deviations of DAVEC. On the other hand, SAVEC is much more likely to catch all class A events compared with DAVEC models as seen by the higher PPV values. Whether it is better to be conservative and miss some class A events while being very accurate in terms of the predicted class A events, or to identify all class A events while giving some false positives, depends on the application. Often the cost of  false positives and false negatives are not the same; for example consider a medical test for cancer. Thus, we see that our proposed two models have different strengths. In addition, both these models outperform the logistic regression classifier as seen by the AUC values.
+A high PPV signifies a low false positive rate and a high NPV, a low false negative rate. From Table~\ref{tab:AverageAccuracyReal}, we see that SAVEC has the highest average PPV and DAVEC has the highest average NPV for all event ages.   Of the two classifiers, SAVEC is more conservative in predicting class A events compared with the DAVEC. That is, if SAVEC predicts an event as belonging to class A, it is more likely that the actual event is of class A compared with DAVEC. This is supported by the high mean PPV values and the associated low standard deviations of SAVEC. On the other hand, DAVEC is much more likely to catch all class A events compared with SAVEC  as seen by the higher NPV values, i.e. there may be more false positives but a low number of false negatives indicate that class A events are unlikely to be labelled as class B. Whether it is better to be conservative and miss some class A events while being very accurate in terms of the predicted class A events, or to identify all class A events while giving some false positives, depends on the application. Often the cost of  false positives and false negatives are not the same; for example consider a medical test for cancer. Thus, we see that our proposed two models have different strengths. In addition, both these models outperform the logistic regression classifier as seen by the AUC values.
+
 
 \subsection{Nitrogen dioxide monitoring}\label{sec:NO2Exp}
 
-The second application focuses on event extraction from Nitrogen Dioxide $(\text{NO}_2)$ data from NASA's NEO website \citep{OMINO2}. The Ozone Monitoring Instrument (OMI) \citep{levelt2006ozone} aboard the Aura satellite records a variety of air quality measures including $\text{NO}_2$ concentrations around the world. We use some of this data to demonstrate the event extraction and feature computation process for a 3-dimensional data stream.
+The second application focuses on event extraction from Nitrogen Dioxide $(\text{NO}_2)$ data from NASA's NEO website \citep{OMINO2}. Our aim is to show the applicability of our event extraction algorithm in diverse applications. The Ozone Monitoring Instrument (OMI) \citep{levelt2006ozone} aboard the Aura satellite records a variety of air quality measures including $\text{NO}_2$ concentrations around the world. We use some of this data to demonstrate the event extraction and feature computation process for a 3-dimensional data stream.
 
 We use OMI $\text{NO}_2$ monthly data from March to June in the years 2008 and 2018 for a comparison study. For each month the data comes in a matrix of $1799 \times 3600$ dimensions. For ease of calculation we reduce the dimension of this matrix to $180 \times 360 $, by computing the average of each $10 \times 10$ block of data in the original matrix. The OMI $\text{NO}_2$ data for two months (March 2008 and March 2018) are shown in Figure~\ref{fig:NO2March2008}.
 
@@ -708,9 +828,9 @@ Using Algorithm~\ref{algo:events_extraction}, we extract events from this data s
 
 For each event we compute features 1--8 and 14 from the list of features in Section~\ref{sec:Featurelist}. These features are chosen for ease of computation. Specially as we are not focusing on event classification in this application, we do not compute the other features which involve fitting splines for 3-dimensional data.
 
-We analyse the two events that had the highest average $\text{NO}_2$ levels for each of 2008 and 2018. The maps in Figure~\ref{fig:HighestEventNO220082018} show the spatial locations and the $\text{NO}_2$ levels of these two events for 2008 and 2018. As these two events are geographically at the same location, we compare the average  $\text{NO}_2$ levels for these two events for the months from March to June in 2008 with those of 2018. The graph in Figure~\ref{fig:HighestEventNO2200820183} shows that the average $\text{NO}_2$ levels have decreased in 2018 compared to 2008 for this geographic location.
+We analyse the two events that have the highest average $\text{NO}_2$ levels for each of 2008 and 2018. The maps in Figure~\ref{fig:HighestEventNO220082018} show the spatial locations and the $\text{NO}_2$ levels of these two events for 2008 and 2018. As these two events are geographically at the same location, we compare the average  $\text{NO}_2$ levels for these two events for the months from March to June in 2008 with those of 2018. The graph in Figure~\ref{fig:HighestEventNO2200820183} shows that the average $\text{NO}_2$ levels have decreased in 2018 compared to 2008 for this geographical location.
 
-Next we match the events in 2008 and 2018 by their spatial location. We do a simple analysis of these $\text{NO}_2$ events. We want to know if these $\text{NO}_2$ events have increased or decreased in severity during this 10 year time gap. For each of these matched events we find the average $\text{NO}_2$ level difference between 2018 and 2008. Figure~\ref{fig:DifferenceInNO2Levels} shows the graph of these differences. We see that 4 events have positive $\text{NO}_2$ differences for each month, i.e.\ the average $\text{NO}_2$ levels have increased from 2008 to 2018 for these 4 events. In addition, event 15 is different from other events. Figure~\ref{fig:PositiveDifferentEventsNO220082018} shows the locations of the increased $\text{NO}_2$ events in March 2018 along with the location of the outlying event 15.
+Next we match the events in 2008 and 2018 by their spatial location and perform a simple analysis. We want to know if these $\text{NO}_2$ events have increased or decreased in severity during this 10 year time gap. For each of these matched events we find the average $\text{NO}_2$ level difference between 2018 and 2008. Figure~\ref{fig:DifferenceInNO2Levels1} shows the graph of these differences and from Figure~\ref{fig:DifferenceInNO2Levels2} we see that 4 events have positive $\text{NO}_2$ differences for each month, i.e., the average $\text{NO}_2$ levels have increased from 2008 to 2018 for these 4 events. In addition, event 15 is different from other events. Figure~\ref{fig:PositiveDifferentEventsNO220082018} shows the locations of the increased $\text{NO}_2$ events in March 2018 along with the location of the outlying event 15.
 
 \begin{figure}
 	\centering
@@ -726,24 +846,25 @@ Next we match the events in 2008 and 2018 by their spatial location. We do a sim
 	\label{fig:PositiveDifferentEventsNO220082018}
 \end{figure}
 
-While the increased industrialization in India and the ongoing war in the Middle-East  may be contributors, an investigation of reasons behind the increased $\text{NO}_2$ levels is beyond the scope of this study. Our aim is to demonstrate the applicability of our event extraction and event classification algorithms for different applications.
+While the increased industrialisation in India and the ongoing war in the Middle-East  may be contributors, an investigation of reasons behind the increased $\text{NO}_2$ levels is beyond the scope of this study. Our aim is to demonstrate the applicability of our event extraction and event classification algorithms for different applications.
 
 % =======================================================================
 \section{Conclusions}\label{sec:Conclusions}
 % =======================================================================
 
-This paper has proposed a framework for event extraction and event classification in data streams with a focus on early event classification. We have introduced  time-varying coefficient models for event classification, and we have proposed two classifiers: a static and an updating classifier, both of which take developing event features/partial observations as input. We have tested our framework using 3 applications, one synthetic data application and two real data applications. We have shown that we obtain better accuracy results compared to logistic regression for these applications.
+This paper has proposed a framework for event extraction and event classification in data streams with a focus on early event classification. We  proposed two early event classifiers, SAVEC and DAVEC. SAVEC is a static classifier suited for stable data distributions and DAVEC is a dynamic classifier suited for dynamic or non-stationary data distributions. 
+We have tested our early classification framework using 2 applications, one synthetic and one real. We have shown that we obtain better accuracy results compared to logistic regression for these applications.
 
-In addition, we have proposed a simple algorithm for event extraction, which can be used on two or three dimensional data streams. The applicability of our event extraction algorithm has been demonstrated using the $\text{NO}_2$ data from NASA's NEO website.
+In addition, we have proposed an algorithm for event extraction, which can be used on two or three dimensional data streams. The applicability of our event extraction algorithm has been demonstrated using the $\text{NO}_2$ data from NASA's NEO website.
 
-Future directions for this research include extending the age-varying events classifier to  automatically update coefficients, and including a greater variety of event extraction processes.
+Future directions for this research include extending SAVEC to use other base classifiers  and including a greater variety of event extraction processes.
 
 % =======================================================================
 \section{Supplementary material}
 % =======================================================================
-{\bf R-package eventstream:} This package contains Algorithm~\ref{algo:events_extraction} for event extraction, the age-varying event classifier for early event classification, functions for synthetic data generation, the fibre-optic data stream and $\text{NO}_2$ data for 2008 and 2018. It is available from Github at \url{https://github.com/sevvandi/eventstream}. \\
-{\bf Scripts:} There are three files containing the R code used in Section~\ref{sec:Experiments}. The file \url{Supp_Mat_1.R}, \url{Supp_Mat_2.R} and \url{Supp_Mat_3.R} contain the code applicable for synthetic data in Section~\ref{subsec:Synthetic}, fibre optic data in Section~\ref{sec:FibreOpticExperiment} and $\text{NO}_2$ data in Section~\ref{sec:NO2Exp} respectively. The file \url{Supp_Mat_4.R} contains the code used to produce some other graphs and images in the paper. \\
-{\bf Other R-packages:} We have used the following R-packages either in this paper or within the package \textit{eventstream} : \textit{dma} \citep{dma}, \, \textit{abind} \citep{abind}, \, \textit{AtmRay} \citep{atmray}, \, \textit{pROC} \citep{proc}, \,  \textit{reshape2} \citep{reshape2}, \,  \textit{ggplot2} \citep{ggplot2}, \, \textit{raster} \citep{raster},  \,  \textit{maps} \citep{maps}, \,  \textit{tensorA} \citep{tensorA}, \,  \textit{glmnet} \citep{glmnet}, \,  \textit{dbscan} \citep{dbscan} and \textit{MASS} \citep{MASS}.
+{\bf R-package eventstream:} This package contains Algorithm~\ref{algo:events_extraction} for event extraction, SAVEC for early event classification, functions for synthetic data generation, the fibre-optic data stream and $\text{NO}_2$ data for 2008 and 2018. It is available from Github at \url{https://github.com/sevvandi/eventstream}. DAVEC is built using existing functionality of the R package \textit{dma} \citep{dma}.  \\
+{\bf Scripts:} There are three files containing the R code used in Section~\ref{sec:Experiments}.  The file \url{Supp_Mat_1.R}, \url{Supp_Mat_2.R} and \url{Supp_Mat_3.R} contain the code applicable for synthetic data in Section~\ref{subsec:Synthetic}, fibre optic data in Section~\ref{sec:FibreOpticExperiment} and $\text{NO}_2$ data in Section~\ref{sec:NO2Exp} respectively. The file \url{Supp_Mat_4.R} contains the code used to produce some other graphs and images in the paper. \\
+{\bf Other R-packages:} We have used the following R-packages either in this paper or within the package \textit{eventstream} :  \textit{abind} \citep{abind}, \, \textit{AtmRay} \citep{atmray}, \, \textit{pROC} \citep{proc}, \,  \textit{reshape2} \citep{reshape2}, \,  \textit{ggplot2} \citep{ggplot2}, \, \textit{raster} \citep{raster},  \,  \textit{maps} \citep{maps}, \,  \textit{tensorA} \citep{tensorA}, \,  \textit{glmnet} \citep{glmnet}, \,  \textit{dbscan} \citep{dbscan} and \textit{MASS} \citep{MASS}.
 
 % =======================================================================
 \section*{Acknowledgements}
