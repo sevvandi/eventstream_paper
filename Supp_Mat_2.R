@@ -1,8 +1,8 @@
 #  THIS FILE CONTAINS EXPERIMENTS USING REAL APPLICATION 1 DATA
 # -----------------------------------------------------------------------------------
-# Experiment 2.1 - App 1 data - Age-varying events Classifier & glm
-# Experiment 2.2 - App 1 data - state space models
-# Output 2.1 - App 1 data associated graphs
+# Experiment 2.1 - App 1 data - SAVEC and Logistic Regression
+# Experiment 2.2 - App 1 data - DAVEC
+# Results in Table 3 
 # -----------------------------------------------------------------------------------
 
 library("eventstream")
@@ -14,7 +14,7 @@ library("reshape2")
 library("ggplot2")
 
 # -----------------------------------------------------------------------------------
-# Experiment 2.1 - App 1 data - Age-varying events Classifier & glm
+# Experiment 2.1 - App 1 data - SAVEC and Logistic Regression
 # -----------------------------------------------------------------------------------
 
 # Load Application 1 data and class labels
@@ -168,24 +168,11 @@ for(i in 1:nn){
   
 }
 
-apply(roc_glm_stages,2,mean)
-apply(roc_glm_stages,2,sd)
-apply(roc_td_stages,2,mean)
-apply(roc_td_stages,2,sd)
 
-apply(ppv_glm_stages,2,mean)
-apply(ppv_glm_stages,2,sd)
-apply(ppv_td_stages,2,mean)
-apply(ppv_td_stages,2,sd)
-
-apply(npv_glm_stages,2,mean)
-apply(npv_glm_stages,2,sd)
-apply(npv_td_stages,2,mean)
-apply(npv_td_stages,2,sd)
 
 
 # -----------------------------------------------------------------------------------
-# Experiment 2.2 - App 1 data - state space models
+# Experiment 2.2 - App 1 data - DAVEC
 # -----------------------------------------------------------------------------------
 
 # Load Application 1 data and class labels
@@ -284,134 +271,35 @@ for(kk in 1:nn){
   
 }
 
+# -----------------------------------------------------------------------------------
+# Results in Table 3 
+# -----------------------------------------------------------------------------------
+
+
+# ---- Averages 
+apply(ppv_td_stages,2,mean)
 apply(ppv_dma_stages,2,mean)
-apply(ppv_dma_stages,2,sd)
+apply(ppv_glm_stages,2,mean)
 
+apply(npv_td_stages,2,mean)
 apply(npv_dma_stages,2,mean)
-apply(npv_dma_stages,2,sd)
+apply(npv_glm_stages,2,mean)
 
+apply(roc_td_stages,2,mean)
 apply(roc_dma_stages,2,mean)
+apply(roc_glm_stages,2,mean)
+
+
+# ---- Standard deviations
+apply(ppv_td_stages,2,sd)
+apply(ppv_dma_stages,2,sd)
+apply(ppv_glm_stages,2,sd)
+
+apply(npv_td_stages,2,sd)
+apply(npv_dma_stages,2,sd)
+apply(npv_glm_stages,2,sd)
+
+apply(roc_td_stages,2,sd)
 apply(roc_dma_stages,2,sd)
-
-
-# -----------------------------------------------------------------------------------
-# Output 2.1 - App 1 data associated graphs
-# -----------------------------------------------------------------------------------
-
-# ----  PPV graph  ------------------------------------------------------------------
-
-ppv_td_stages_2 <- cbind.data.frame(1:nn,ppv_td_stages)
-colnames(ppv_td_stages_2) <- c("Fold","T1", "T2", "T3", "T4")
-ppv_td_stages_2 <- as.data.frame(ppv_td_stages_2)
-df1 <- melt(id="Fold",ppv_td_stages_2)
-df1 <- cbind.data.frame(df1, rep("A.V. Events", dim(df1)[1]))
-df1
-colnames(df1) <- c("Fold", "Age", "Accuracy", "Classifier")
-df1$Accuracy <- df1$Accuracy*100
-
-
-ppv_glm_stages_2 <- cbind.data.frame(1:nn,ppv_glm_stages)
-colnames(ppv_glm_stages_2) <- c("Fold","T1", "T2", "T3", "T4")
-ppv_glm_stages_2 <- as.data.frame(ppv_glm_stages_2)
-df2 <- melt(id="Fold",ppv_glm_stages_2)
-df2 <- cbind.data.frame(df2, rep("Logistic Reg.", dim(df1)[1]))
-df2
-colnames(df2) <- c("Fold", "Age", "Accuracy", "Classifier")
-df2$Accuracy <- df2$Accuracy*100
-
-
-ppv_dma_stages_2 <- cbind.data.frame(1:nn,ppv_dma_stages)
-colnames(ppv_dma_stages_2) <- c("Fold","T1", "T2", "T3", "T4")
-ppv_dma_stages_2 <- as.data.frame(ppv_dma_stages_2)
-df3 <- melt(id="Fold",ppv_dma_stages_2)
-df3 <- cbind.data.frame(df3, rep("State Space", dim(df3)[1]))
-df3
-colnames(df3) <- c("Fold", "Age", "Accuracy", "Classifier")
-df3$Accuracy <- df3$Accuracy*100
-
-df <- rbind(df1,df2, df3)
-
-pp <- ggplot(df, aes(Age,Accuracy)) + geom_point(aes(color=Classifier)) 
-pp +  geom_line(data=df1, aes(color=Classifier, group=Fold)) + geom_line(data=df2, aes(color=Classifier, group=Fold) ) + geom_line(data=df3, aes(color=Classifier, group=Fold)) + facet_grid(.~Classifier)  +  xlab("Event Age") + ylab("PPV") + theme_bw()
-
-pp  + geom_line(data=df2, aes(color=Classifier, group=Fold) ) +  geom_line(data=df1, aes(color=Classifier, group=Fold)) + geom_line(data=df3, aes(color=Classifier, group=Fold))  + facet_grid(Fold~.)  +  xlab("Event Age") + ylab("PPV") + theme_bw()
-
-
-
-# ----  NPV graph  ------------------------------------------------------------------
-
-npv_td_stages_2 <- cbind.data.frame(1:nn,npv_td_stages)
-colnames(npv_td_stages_2) <- c("Fold","T1", "T2", "T3", "T4")
-npv_td_stages_2 <- as.data.frame(npv_td_stages_2)
-df1 <- melt(id="Fold",npv_td_stages_2)
-df1 <- cbind.data.frame(df1, rep("A.V. Events", dim(df1)[1]))
-df1
-colnames(df1) <- c("Fold", "Age", "Accuracy", "Classifier")
-df1$Accuracy <- df1$Accuracy*100
-
-
-npv_glm_stages_2 <- cbind.data.frame(1:nn,npv_glm_stages)
-colnames(npv_glm_stages_2) <- c("Fold","T1", "T2", "T3", "T4")
-npv_glm_stages_2 <- as.data.frame(npv_glm_stages_2)
-df2 <- melt(id="Fold",npv_glm_stages_2)
-df2 <- cbind.data.frame(df2, rep("Logistic Reg.", dim(df1)[1]))
-df2
-colnames(df2) <- c("Fold", "Age", "Accuracy", "Classifier")
-df2$Accuracy <- df2$Accuracy*100
-
-
-npv_dma_stages_2 <- cbind.data.frame(1:nn,npv_dma_stages)
-colnames(npv_dma_stages_2) <- c("Fold","T1", "T2", "T3", "T4")
-npv_dma_stages_2 <- as.data.frame(npv_dma_stages_2)
-df3 <- melt(id="Fold",npv_dma_stages_2)
-df3 <- cbind.data.frame(df3, rep("State Space", dim(df3)[1]))
-df3
-colnames(df3) <- c("Fold", "Age", "Accuracy", "Classifier")
-df3$Accuracy <- df3$Accuracy*100
-
-df <- rbind(df1,df2, df3)
-
-pp <- ggplot(df, aes(Age,Accuracy)) + geom_point(aes(color=Classifier)) 
-pp +  geom_line(data=df1, aes(color=Classifier, group=Fold)) + geom_line(data=df2, aes(color=Classifier, group=Fold) ) + geom_line(data=df3, aes(color=Classifier, group=Fold)) + facet_grid(.~Classifier)  +  xlab("Event Age") + ylab("NPV") + theme_bw()
-
-pp  + geom_line(data=df2, aes(color=Classifier, group=Fold) ) +  geom_line(data=df1, aes(color=Classifier, group=Fold)) + geom_line(data=df3, aes(color=Classifier, group=Fold))  + facet_grid(Fold~.)  +  xlab("Event Age") + ylab("NPV") + theme_bw()
-
-
-# ----  ROC graph  ------------------------------------------------------------------
-roc_td_stages_2 <- cbind.data.frame(1:nn,roc_td_stages)
-colnames(roc_td_stages_2) <- c("Fold","T1", "T2", "T3", "T4")
-roc_td_stages_2 <- as.data.frame(roc_td_stages_2)
-df1 <- melt(id="Fold",roc_td_stages_2)
-df1 <- cbind.data.frame(df1, rep("A.V. Events", dim(df1)[1]))
-df1
-colnames(df1) <- c("Fold", "Age", "Accuracy", "Classifier")
-df1$Accuracy <- df1$Accuracy*100
-
-
-roc_glm_stages_2 <- cbind.data.frame(1:nn,roc_glm_stages)
-colnames(roc_glm_stages_2) <- c("Fold","T1", "T2", "T3", "T4")
-roc_glm_stages_2 <- as.data.frame(roc_glm_stages_2)
-df2 <- melt(id="Fold",roc_glm_stages_2)
-df2 <- cbind.data.frame(df2, rep("Logistic Reg.", dim(df1)[1]))
-df2
-colnames(df2) <- c("Fold", "Age", "Accuracy", "Classifier")
-df2$Accuracy <- df2$Accuracy*100
-
-
-roc_dma_stages_2 <- cbind.data.frame(1:nn,roc_dma_stages)
-colnames(roc_dma_stages_2) <- c("Fold","T1", "T2", "T3", "T4")
-roc_dma_stages_2 <- as.data.frame(roc_dma_stages_2)
-df3 <- melt(id="Fold",roc_dma_stages_2)
-df3 <- cbind.data.frame(df3, rep("State Space", dim(df3)[1]))
-df3
-colnames(df3) <- c("Fold", "Age", "Accuracy", "Classifier")
-df3$Accuracy <- df3$Accuracy*100
-
-df <- rbind(df1,df2, df3)
-
-pp <- ggplot(df, aes(Age,Accuracy)) + geom_point(aes(color=Classifier)) 
-pp +  geom_line(data=df1, aes(color=Classifier, group=Fold)) + geom_line(data=df2, aes(color=Classifier, group=Fold) ) + geom_line(data=df3, aes(color=Classifier, group=Fold)) + facet_grid(.~Classifier)  +  xlab("Event Age") + ylab("AUC") + theme_bw()
-
-pp  + geom_line(data=df2, aes(color=Classifier, group=Fold) ) +  geom_line(data=df1, aes(color=Classifier, group=Fold)) + geom_line(data=df3, aes(color=Classifier, group=Fold))  + facet_grid(Fold~.)  +  xlab("Event Age") + ylab("AUC") + theme_bw()
-
+apply(roc_glm_stages,2,sd)
 

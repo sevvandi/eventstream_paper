@@ -1,6 +1,6 @@
 #  THIS FILE CONTAINS EXPERIMENTS USING SYNTHETIC DATA
 # -----------------------------------------------------------------------------------
-# Experiment 1.1 - Synthetic data - SAVEC & glm
+# Experiment 1.1 - Synthetic data - SAVEC and Logistic Regression
 # Experiment 1.2 - Synthetic data - DAVEC
 # Output 1.1 - Synthetic data associated graphs
 # -----------------------------------------------------------------------------------
@@ -15,7 +15,7 @@ library("reshape2")
 library("ggplot2")
 
 # -----------------------------------------------------------------------------------
-# Experiment 1.1 - Synthetic data - SAVEC & glm
+# Experiment 1.1 - Synthetic data - SAVEC and Logistic Regression
 # -----------------------------------------------------------------------------------
 
 accuracy_td_stages <- matrix(0, nrow=5, ncol=4)
@@ -192,10 +192,10 @@ apply(accuracy_dma_stages,2,sd)
 # -----------------------------------------------------------------------------------
 accuracy_td_stages1 <- accuracy_td_stages
 
-accuracy_td_stages <- cbind.data.frame(1:5, accuracy_td_stages)
-colnames(accuracy_td_stages) <- c("Fold","T1", "T2", "T3", "T4")
-accuracy_td_stages <- as.data.frame(accuracy_td_stages)
-df1 <- melt(id="Fold",accuracy_td_stages)
+accuracy_td_stages2 <- cbind.data.frame(1:5, accuracy_td_stages)
+colnames(accuracy_td_stages2) <- c("Fold","T1", "T2", "T3", "T4")
+accuracy_td_stages2 <- as.data.frame(accuracy_td_stages2)
+df1 <- melt(id="Fold",accuracy_td_stages2)
 df1 <- cbind.data.frame(df1, rep("SAVEC", dim(df1)[1]))
 df1
 colnames(df1) <- c("Fold", "Age", "Accuracy", "Classifier")
@@ -203,10 +203,10 @@ df1$Accuracy <- df1$Accuracy*100
 
 accuracy_glm_stages1 <- accuracy_glm_stages
 
-accuracy_glm_stages <- cbind.data.frame(1:5, accuracy_glm_stages)
-colnames(accuracy_glm_stages) <- c("Fold","T1", "T2", "T3", "T4")
-accuracy_glm_stages <- as.data.frame(accuracy_glm_stages)
-df2 <- melt(id="Fold",accuracy_glm_stages)
+accuracy_glm_stages2 <- cbind.data.frame(1:5, accuracy_glm_stages)
+colnames(accuracy_glm_stages2) <- c("Fold","T1", "T2", "T3", "T4")
+accuracy_glm_stages2 <- as.data.frame(accuracy_glm_stages2)
+df2 <- melt(id="Fold",accuracy_glm_stages2)
 df2 <- cbind.data.frame(df2, rep("Logistic Reg.", dim(df2)[1]))
 df2
 colnames(df2) <- c("Fold", "Age", "Accuracy", "Classifier")
@@ -214,10 +214,10 @@ df2$Accuracy <- df2$Accuracy*100
 
 accuracy_dma_stages1 <- accuracy_dma_stages
 
-accuracy_dma_stages <- cbind.data.frame(1:5, accuracy_dma_stages)
-colnames(accuracy_dma_stages) <- c("Fold","T1", "T2", "T3", "T4")
-accuracy_dma_stages <- as.data.frame(accuracy_dma_stages)
-df3 <- reshape2::melt(id="Fold",accuracy_dma_stages)
+accuracy_dma_stages2 <- cbind.data.frame(1:5, accuracy_dma_stages)
+colnames(accuracy_dma_stages2) <- c("Fold","T1", "T2", "T3", "T4")
+accuracy_dma_stages2 <- as.data.frame(accuracy_dma_stages2)
+df3 <- reshape2::melt(id="Fold",accuracy_dma_stages2)
 df3 <- cbind.data.frame(df3, rep("DAVEC", dim(df3)[1]))
 df3
 colnames(df3) <- c("Fold", "Age", "Accuracy", "Classifier")
